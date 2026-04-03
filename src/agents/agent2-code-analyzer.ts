@@ -5,10 +5,10 @@
 // Returns the Arkiv entity ID of the written result.
 
 import Anthropic from "@anthropic-ai/sdk";
-import { walletClient } from "../arkiv/client.js";
-import { writeMemory, TTL_WORKING } from "../arkiv/memory.js";
-import { fetchFileTree, fetchFileContent } from "../github/fetcher.js";
-import { getAgentConfig } from "../config/agents.js";
+import { walletClient } from "../arkiv/client";
+import { writeMemory, TTL_WORKING } from "../arkiv/memory";
+import { fetchFileTree, fetchFileContent } from "../github/fetcher";
+import { getAgentConfig } from "../config/agents";
 
 const anthropic = new Anthropic();
 const config = getAgentConfig("agent2");

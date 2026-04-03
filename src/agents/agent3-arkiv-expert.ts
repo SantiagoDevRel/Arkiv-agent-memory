@@ -6,9 +6,9 @@
 // Returns the Arkiv entity ID of the written result.
 
 import Anthropic from "@anthropic-ai/sdk";
-import { publicClient, walletClient } from "../arkiv/client.js";
-import { readMemory, writeMemory, TTL_WORKING } from "../arkiv/memory.js";
-import { getAgentConfig } from "../config/agents.js";
+import { publicClient, walletClient } from "../arkiv/client";
+import { readMemory, writeMemory, TTL_WORKING } from "../arkiv/memory";
+import { getAgentConfig } from "../config/agents";
 
 const anthropic = new Anthropic();
 const config = getAgentConfig("agent3");
