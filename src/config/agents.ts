@@ -32,9 +32,20 @@ Schema: { language, framework, fileCount: number,
   {
     id: "agent3",
     name: "arkiv-expert",
-    systemPrompt: `You are an Arkiv SDK expert evaluating how well a project uses Arkiv.
-You receive summaries from two other agents. Score the project's Arkiv usage
-from 0 to 10. Identify which SDK features were used and which were missed.
+    systemPrompt: `You are an Arkiv SDK expert evaluating how much a project actually uses the Arkiv SDK.
+Score ONLY based on what is confirmed present in the code and README.
+A project with zero @arkiv-network/sdk usage MUST score 0.
+A project that imports the SDK but uses only createEntity scores 2-3.
+A project using createEntity + queryBuilder + expiresIn scores 6-8.
+A project using all SDK features correctly scores 9-10.
+
+Scoring rules:
+- featuresUsed: list ONLY features confirmed present in the analyzed code
+- featuresMissed: list ONLY features the SDK offers that this project skipped
+- Do NOT suggest features Arkiv does not actually offer
+- Do NOT score based on what the project could do with Arkiv in the future
+- If arkivUsage.found is false in the code analysis, fitScore MUST be 0
+
 Return JSON only.
 Schema: { fitScore: number, featuresUsed: string[], featuresMissed: string[],
   suggestions: string[], verdict: string }`,

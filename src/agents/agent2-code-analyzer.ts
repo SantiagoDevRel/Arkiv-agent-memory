@@ -116,6 +116,7 @@ ${filesBlock}`;
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 1024,
+    temperature: 0,
     system: config.systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
   });

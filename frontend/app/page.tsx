@@ -19,9 +19,11 @@ type AgentEvent = {
   sessionId?: string;
 };
 
+type LogEntry = { time: string; message: string };
+
 type AgentState = {
   status: "idle" | "running" | "done" | "waiting";
-  logs: string[];
+  logs: LogEntry[];
   entityId?: string;
   payload?: Record<string, unknown>;
 };
@@ -45,6 +47,14 @@ const AGENTS = [
 const BLOCK_TIME_SECONDS = 2;
 
 // --- Helpers ---
+
+function now(): string {
+  return new Date().toLocaleTimeString("en-US", { hour12: false });
+}
+
+function logEntry(message: string): LogEntry {
+  return { time: now(), message };
+}
 
 function truncateId(id: string): string {
   if (id.length <= 16) return id;
@@ -108,6 +118,10 @@ function TtlBar({ expiresAtBlock }: { expiresAtBlock?: string | number | bigint 
     ? `${Math.floor(secondsLeft / 60)}m ${secondsLeft % 60}s`
     : `${secondsLeft}s`;
 
+  const expiresAt = new Date(Date.now() + secondsLeft * 1000);
+  const expiryDate = expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const expiryTime = expiresAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+
   return (
     <div className="mt-2">
       <div className="flex justify-between text-[11px] text-[#888888] mb-1">
@@ -120,6 +134,11 @@ function TtlBar({ expiresAtBlock }: { expiresAtBlock?: string | number | bigint 
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
+      {secondsLeft > 86400 && (
+        <div className="text-[10px] text-[#888888] mt-1">
+          Expires {expiryDate} at {expiryTime}
+        </div>
+      )}
     </div>
   );
 }
@@ -162,7 +181,10 @@ function AgentPanel({ agent, state }: { agent: typeof AGENTS[number]; state: Age
       {state.logs.length > 0 && (
         <div className="bg-[#0a0a0a] rounded p-2 max-h-32 overflow-y-auto font-mono text-[11px] leading-[1.6] text-[#888888]">
           {state.logs.map((log, i) => (
-            <div key={i}>{log}</div>
+            <div key={i}>
+              <span className="text-[#555555] mr-2">{log.time}</span>
+              {log.message}
+            </div>
           ))}
           <div ref={logsEndRef} />
         </div>
@@ -177,6 +199,14 @@ function AgentPanel({ agent, state }: { agent: typeof AGENTS[number]; state: Age
             <span className="font-mono text-[11px] text-[#888888]">
               {truncateId(state.entityId)}
             </span>
+            <a
+              href={`https://explorer.kaolin.hoodi.arkiv.network/tx/${state.entityId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-[#888888] hover:text-[#f0f0f0] transition-colors"
+            >
+              view &rarr;
+            </a>
           </div>
           {state.payload && (
             <pre className="text-[10px] text-[#888888] mt-1 whitespace-pre-wrap break-all max-h-24 overflow-y-auto">
@@ -214,6 +244,14 @@ function FinalReport({ report, entityId }: { report: Record<string, unknown>; en
         <span className="font-mono text-[11px] text-[#888888] ml-auto">
           {truncateId(entityId)}
         </span>
+        <a
+          href={`https://explorer.kaolin.hoodi.arkiv.network/tx/${entityId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[10px] text-[#888888] hover:text-[#f0f0f0] transition-colors"
+        >
+          view &rarr;
+        </a>
       </div>
 
       <h2 className="text-xl font-semibold text-[#f0f0f0] mb-1">
@@ -473,7 +511,7 @@ export default function Home() {
               [event.agentId!]: {
                 ...prev[event.agentId!],
                 status: "running",
-                logs: [...prev[event.agentId!].logs, event.message || "Starting..."],
+                logs: [...prev[event.agentId!].logs, logEntry(event.message || "Starting...")],
               },
             }));
           } else if (event.type === "agent-log" && event.agentId) {
@@ -481,7 +519,7 @@ export default function Home() {
               ...prev,
               [event.agentId!]: {
                 ...prev[event.agentId!],
-                logs: [...prev[event.agentId!].logs, event.message || ""],
+                logs: [...prev[event.agentId!].logs, logEntry(event.message || "")],
               },
             }));
           } else if (event.type === "agent-done" && event.agentId) {
@@ -489,7 +527,7 @@ export default function Home() {
               ...prev,
               [event.agentId!]: {
                 status: "done",
-                logs: [...prev[event.agentId!].logs, event.message || "Done"],
+                logs: [...prev[event.agentId!].logs, logEntry(event.message || "Done")],
                 entityId: event.entityId,
                 payload: event.payload as Record<string, unknown>,
               },
