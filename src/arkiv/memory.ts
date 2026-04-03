@@ -15,14 +15,14 @@ export const TTL_PERSISTENT = 30 * 24 * 60 * 60; // 2592000s — for agent 4
 
 /**
  * Writes a JSON payload as an entity to Arkiv with the given attributes and TTL.
- * Returns the entity key (ID).
+ * Returns both the entity key and the transaction hash.
  */
 export async function writeMemory(
   client: WalletArkivClient,
   payload: object,
   attributes: Record<string, string>,
   ttl: number
-): Promise<string> {
+): Promise<{ entityKey: string; txHash: string }> {
   const attrArray = Object.entries(attributes).map(([key, value]) => ({ key, value }));
 
   console.log(`[arkiv] writing entity with attributes:`, attributes);
@@ -35,7 +35,7 @@ export async function writeMemory(
   });
 
   console.log(`[arkiv] entity written: ${entityKey} (tx: ${txHash})`);
-  return entityKey;
+  return { entityKey, txHash };
 }
 
 /**

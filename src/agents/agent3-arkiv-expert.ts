@@ -9,6 +9,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { publicClient, walletClient } from "../arkiv/client";
 import { readMemory, writeMemory, TTL_WORKING } from "../arkiv/memory";
 import { getAgentConfig } from "../config/agents";
+import { getArkivSDKDocs } from "../arkiv/sdk-docs";
 
 const anthropic = new Anthropic();
 const config = getAgentConfig("agent3");
@@ -39,7 +40,7 @@ export async function runAgent3(
   owner: string,
   repo: string,
   sessionId: string
-): Promise<string> {
+): Promise<{ entityKey: string; txHash: string }> {
   console.log(`[agent3] starting — evaluating Arkiv usage for ${owner}/${repo}`);
 
   // Read Agent 1 output from Arkiv
@@ -68,19 +69,26 @@ export async function runAgent3(
   const codeAnalysis = codeEntities[0].toJson();
   console.log(`[agent3] code-analysis loaded`);
 
-  // Send both to Claude for Arkiv evaluation
-  const userPrompt = `Evaluate this project's Arkiv SDK usage based on these two agent reports. Return JSON only.
+  // Load expert knowledge + SDK type definitions
+  const docs = getArkivSDKDocs();
+  console.log(`[agent3] loaded expert knowledge: ${docs.length} characters`);
 
-README ANALYSIS (from Agent 1):
+  // Send both agent reports + expert knowledge to Claude for evaluation
+  const userPrompt = `Evaluate this project's Arkiv SDK usage based on these two agent reports and the expert knowledge provided. Return JSON only.
+
+=== ARKIV SDK EXPERT KNOWLEDGE ===
+${docs}
+
+=== README ANALYSIS (from Agent 1) ===
 ${JSON.stringify(readmeSummary, null, 2)}
 
-CODE ANALYSIS (from Agent 2):
+=== CODE ANALYSIS (from Agent 2) ===
 ${JSON.stringify(codeAnalysis, null, 2)}`;
 
   console.log(`[agent3] sending to Claude for evaluation...`);
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 1024,
+    max_tokens: 2048,
     temperature: 0,
     system: config.systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
@@ -94,7 +102,7 @@ ${JSON.stringify(codeAnalysis, null, 2)}`;
 
   // Write to Arkiv
   console.log(`[agent3] writing to Arkiv...`);
-  const entityKey = await writeMemory(
+  const { entityKey, txHash } = await writeMemory(
     walletClient,
     evaluation,
     { type: "arkiv-evaluation", sessionId, repo: `${owner}/${repo}` },
@@ -102,5 +110,5 @@ ${JSON.stringify(codeAnalysis, null, 2)}`;
   );
   console.log(`[agent3] entity written: ${entityKey}`);
 
-  return entityKey;
+  return { entityKey, txHash };
 }

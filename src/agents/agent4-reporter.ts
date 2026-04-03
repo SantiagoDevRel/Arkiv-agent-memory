@@ -38,7 +38,7 @@ export async function runAgent4(
   owner: string,
   repo: string,
   sessionId: string
-): Promise<string> {
+): Promise<{ entityKey: string; txHash: string }> {
   console.log(`[agent4] starting — generating final report for ${owner}/${repo}`);
 
   // Read all three agent outputs from Arkiv
@@ -101,7 +101,7 @@ ${JSON.stringify(arkivEvaluation, null, 2)}`;
 
   // Write to Arkiv with PERSISTENT TTL (30 days)
   console.log(`[agent4] writing final report to Arkiv (TTL: 30 days)...`);
-  const entityKey = await writeMemory(
+  const { entityKey, txHash } = await writeMemory(
     walletClient,
     report,
     { type: "final-report", sessionId, repo: `${owner}/${repo}` },
@@ -109,5 +109,5 @@ ${JSON.stringify(arkivEvaluation, null, 2)}`;
   );
   console.log(`[agent4] entity written: ${entityKey}`);
 
-  return entityKey;
+  return { entityKey, txHash };
 }

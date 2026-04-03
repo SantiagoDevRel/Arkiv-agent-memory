@@ -40,7 +40,7 @@ export async function runAgent1(
   owner: string,
   repo: string,
   sessionId: string
-): Promise<string> {
+): Promise<{ entityKey: string; txHash: string }> {
   console.log(`[agent1] starting — analyzing README for ${owner}/${repo}`);
 
   // Fetch the README from GitHub
@@ -71,7 +71,7 @@ export async function runAgent1(
 
   // Write to Arkiv
   console.log(`[agent1] writing to Arkiv...`);
-  const entityKey = await writeMemory(
+  const { entityKey, txHash } = await writeMemory(
     walletClient,
     analysis,
     { type: "readme-summary", sessionId, repo: `${owner}/${repo}` },
@@ -79,5 +79,5 @@ export async function runAgent1(
   );
   console.log(`[agent1] entity written: ${entityKey}`);
 
-  return entityKey;
+  return { entityKey, txHash };
 }

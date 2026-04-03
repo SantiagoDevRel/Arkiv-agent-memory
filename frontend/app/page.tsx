@@ -14,6 +14,7 @@ type AgentEvent = {
   agentId?: string;
   message?: string;
   entityId?: string;
+  txHash?: string;
   payload?: Record<string, unknown>;
   report?: Record<string, unknown>;
   sessionId?: string;
@@ -25,6 +26,7 @@ type AgentState = {
   status: "idle" | "running" | "done" | "waiting";
   logs: LogEntry[];
   entityId?: string;
+  txHash?: string;
   payload?: Record<string, unknown>;
 };
 
@@ -143,13 +145,60 @@ function TtlBar({ expiresAtBlock }: { expiresAtBlock?: string | number | bigint 
   );
 }
 
+// --- Delete Button Component ---
+
+function DeleteButton({ entityKey, onDeleted }: { entityKey: string; onDeleted: () => void }) {
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    if (!window.confirm("Remove this report from Arkiv permanently?")) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/entity", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: entityKey }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onDeleted();
+      } else {
+        setError(data.error || "Delete failed");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <>
+      <button
+        onClick={handleDelete}
+        disabled={deleting}
+        className="w-4 h-4 flex items-center justify-center text-[#888888] hover:text-[#E24B4A] transition-colors text-xs leading-none disabled:opacity-50"
+        title="Delete from Arkiv"
+      >
+        {deleting ? "..." : "\u00d7"}
+      </button>
+      {error && <div className="text-[10px] text-[#E24B4A] mt-1">{error}</div>}
+    </>
+  );
+}
+
 // --- Agent Panel Component ---
 
-function AgentPanel({ agent, state }: { agent: typeof AGENTS[number]; state: AgentState }) {
-  const logsEndRef = useRef<HTMLDivElement>(null);
+function AgentPanel({ agent, state, onEntityDeleted }: { agent: typeof AGENTS[number]; state: AgentState; onEntityDeleted?: (agentId: string) => void }) {
+  const logContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    logContainerRef.current?.scrollTo({
+      top: logContainerRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [state.logs.length]);
 
   return (
@@ -179,19 +228,21 @@ function AgentPanel({ agent, state }: { agent: typeof AGENTS[number]; state: Age
       </div>
 
       {state.logs.length > 0 && (
-        <div className="bg-[#0a0a0a] rounded p-2 max-h-32 overflow-y-auto font-mono text-[11px] leading-[1.6] text-[#888888]">
+        <div
+          ref={logContainerRef}
+          className="bg-[#0a0a0a] rounded p-2 max-h-[160px] overflow-y-auto scroll-smooth font-mono text-[11px] leading-[1.6] text-[#888888]"
+        >
           {state.logs.map((log, i) => (
             <div key={i}>
               <span className="text-[#555555] mr-2">{log.time}</span>
               {log.message}
             </div>
           ))}
-          <div ref={logsEndRef} />
         </div>
       )}
 
       {state.entityId && (
-        <div className="mt-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded p-3">
+        <div className="mt-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded p-3 relative">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1D9E75]/20 text-[#1D9E75]">
               entity
@@ -200,13 +251,18 @@ function AgentPanel({ agent, state }: { agent: typeof AGENTS[number]; state: Age
               {truncateId(state.entityId)}
             </span>
             <a
-              href={`https://explorer.kaolin.hoodi.arkiv.network/tx/${state.entityId}`}
+              href={state.txHash
+                ? `https://explorer.kaolin.hoodi.arkiv.network/tx/${state.txHash}`
+                : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${state.entityId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[10px] text-[#888888] hover:text-[#f0f0f0] transition-colors"
             >
               view &rarr;
             </a>
+            <span className="ml-auto">
+              <DeleteButton entityKey={state.entityId} onDeleted={() => onEntityDeleted?.(agent.id)} />
+            </span>
           </div>
           {state.payload && (
             <pre className="text-[10px] text-[#888888] mt-1 whitespace-pre-wrap break-all max-h-24 overflow-y-auto">
@@ -221,7 +277,7 @@ function AgentPanel({ agent, state }: { agent: typeof AGENTS[number]; state: Age
 
 // --- Report Component ---
 
-function FinalReport({ report, entityId }: { report: Record<string, unknown>; entityId: string }) {
+function FinalReport({ report, entityId, txHash }: { report: Record<string, unknown>; entityId: string; txHash?: string }) {
   const r = report as {
     projectName?: string;
     oneLineSummary?: string;
@@ -245,7 +301,9 @@ function FinalReport({ report, entityId }: { report: Record<string, unknown>; en
           {truncateId(entityId)}
         </span>
         <a
-          href={`https://explorer.kaolin.hoodi.arkiv.network/tx/${entityId}`}
+          href={txHash
+            ? `https://explorer.kaolin.hoodi.arkiv.network/tx/${txHash}`
+            : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[10px] text-[#888888] hover:text-[#f0f0f0] transition-colors"
@@ -332,7 +390,7 @@ function FinalReport({ report, entityId }: { report: Record<string, unknown>; en
 
 // --- Past Sessions Component ---
 
-function PastSessions({ sessions }: { sessions: PastSession[] }) {
+function PastSessions({ sessions, onDelete }: { sessions: PastSession[]; onDelete: (entityId: string) => void }) {
   if (sessions.length === 0) return null;
 
   return (
@@ -347,9 +405,12 @@ function PastSessions({ sessions }: { sessions: PastSession[] }) {
           return (
             <div
               key={session.entityId}
-              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3"
+              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 relative"
             >
-              <div className="flex items-center justify-between mb-1">
+              <div className="absolute top-2 right-2">
+                <DeleteButton entityKey={session.entityId} onDeleted={() => onDelete(session.entityId)} />
+              </div>
+              <div className="flex items-center justify-between mb-1 pr-6">
                 <span className="text-sm font-medium text-[#f0f0f0]">
                   {(p.projectName as string) || repo}
                 </span>
@@ -438,7 +499,7 @@ export default function Home() {
     agent3: { status: "idle", logs: [] },
     agent4: { status: "idle", logs: [] },
   });
-  const [finalReport, setFinalReport] = useState<{ report: Record<string, unknown>; entityId: string } | null>(null);
+  const [finalReport, setFinalReport] = useState<{ report: Record<string, unknown>; entityId: string; txHash?: string } | null>(null);
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -529,6 +590,7 @@ export default function Home() {
                 status: "done",
                 logs: [...prev[event.agentId!].logs, logEntry(event.message || "Done")],
                 entityId: event.entityId,
+                txHash: event.txHash,
                 payload: event.payload as Record<string, unknown>,
               },
             }));
@@ -536,6 +598,7 @@ export default function Home() {
             setFinalReport({
               report: (event.report || {}) as Record<string, unknown>,
               entityId: event.entityId || "",
+              txHash: event.txHash,
             });
             // Refresh past sessions
             fetch("/api/sessions")
@@ -602,7 +665,17 @@ export default function Home() {
 
           {/* Agent Panels */}
           {AGENTS.map((agent) => (
-            <AgentPanel key={agent.id} agent={agent} state={agents[agent.id]} />
+            <AgentPanel
+              key={agent.id}
+              agent={agent}
+              state={agents[agent.id]}
+              onEntityDeleted={(agentId) => {
+                setAgents((prev) => ({
+                  ...prev,
+                  [agentId]: { ...prev[agentId], entityId: undefined, txHash: undefined, payload: undefined },
+                }));
+              }}
+            />
           ))}
         </div>
 
@@ -610,7 +683,7 @@ export default function Home() {
         <div>
           {finalReport ? (
             <>
-              <FinalReport report={finalReport.report} entityId={finalReport.entityId} />
+              <FinalReport report={finalReport.report} entityId={finalReport.entityId} txHash={finalReport.txHash} />
               <ScoreComparison current={finalReport.report} past={pastSessions} />
             </>
           ) : (
@@ -623,7 +696,12 @@ export default function Home() {
             </div>
           )}
 
-          <PastSessions sessions={pastSessions} />
+          <PastSessions
+            sessions={pastSessions}
+            onDelete={(entityId) => {
+              setPastSessions((prev) => prev.filter((s) => s.entityId !== entityId));
+            }}
+          />
         </div>
       </div>
     </main>

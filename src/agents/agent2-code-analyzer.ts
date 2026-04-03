@@ -75,7 +75,7 @@ export async function runAgent2(
   owner: string,
   repo: string,
   sessionId: string
-): Promise<string> {
+): Promise<{ entityKey: string; txHash: string }> {
   console.log(`[agent2] starting — analyzing code for ${owner}/${repo}`);
 
   // Fetch the file tree
@@ -130,7 +130,7 @@ ${filesBlock}`;
 
   // Write to Arkiv
   console.log(`[agent2] writing to Arkiv...`);
-  const entityKey = await writeMemory(
+  const { entityKey, txHash } = await writeMemory(
     walletClient,
     analysis,
     { type: "code-analysis", sessionId, repo: `${owner}/${repo}` },
@@ -138,5 +138,5 @@ ${filesBlock}`;
   );
   console.log(`[agent2] entity written: ${entityKey}`);
 
-  return entityKey;
+  return { entityKey, txHash };
 }
