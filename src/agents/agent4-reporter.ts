@@ -8,60 +8,48 @@ import Anthropic from "@anthropic-ai/sdk";
 import { publicClient, walletClient } from "../arkiv/client";
 import { readMemory, writeMemory, TTL_PERSISTENT } from "../arkiv/memory";
 import { getAgentConfig } from "../config/agents";
+import type { AgentEvent } from "../index";
 
 const anthropic = new Anthropic();
 const config = getAgentConfig("agent4");
 
-/**
- * Extracts JSON from a string that may be wrapped in markdown code fences.
- */
 function extractJson(text: string): object {
   try {
     return JSON.parse(text);
   } catch {
     const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (match) {
-      try {
-        return JSON.parse(match[1].trim());
-      } catch { /* fall through */ }
+      try { return JSON.parse(match[1].trim()); } catch { /* */ }
     }
     return { raw: text };
   }
 }
 
-/**
- * Runs Agent 4: reads all prior agent results from Arkiv,
- * synthesizes a final report, and writes it with persistent TTL.
- * Returns the entity key.
- */
+type Emit = (event: AgentEvent) => void;
+const noop: Emit = () => {};
+
 export async function runAgent4(
   owner: string,
   repo: string,
-  sessionId: string
+  sessionId: string,
+  onEvent: Emit = noop
 ): Promise<{ entityKey: string; txHash: string }> {
-  console.log(`[agent4] starting — generating final report for ${owner}/${repo}`);
+  const log = (message: string, opts?: { highlight?: boolean; success?: boolean }) =>
+    onEvent({ type: "agent-log", agentId: "agent4", message, ...opts });
 
-  // Read all three agent outputs from Arkiv
-  console.log(`[agent4] reading readme-summary from Arkiv...`);
-  const readmeEntities = await readMemory(publicClient, {
-    type: "readme-summary",
-    sessionId,
-  });
+  log("Querying Arkiv for all session data...");
+
+  const readmeEntities = await readMemory(publicClient, { type: "readme-summary", sessionId });
   const readmeSummary = readmeEntities.length > 0 ? readmeEntities[0].toJson() : null;
+  if (readmeEntities.length > 0) log(`Found: readme-summary \u00b7 ${readmeEntities[0].key.slice(0, 10)}`);
 
-  console.log(`[agent4] reading code-analysis from Arkiv...`);
-  const codeEntities = await readMemory(publicClient, {
-    type: "code-analysis",
-    sessionId,
-  });
+  const codeEntities = await readMemory(publicClient, { type: "code-analysis", sessionId });
   const codeAnalysis = codeEntities.length > 0 ? codeEntities[0].toJson() : null;
+  if (codeEntities.length > 0) log(`Found: code-analysis \u00b7 ${codeEntities[0].key.slice(0, 10)}`);
 
-  console.log(`[agent4] reading arkiv-evaluation from Arkiv...`);
-  const evalEntities = await readMemory(publicClient, {
-    type: "arkiv-evaluation",
-    sessionId,
-  });
+  const evalEntities = await readMemory(publicClient, { type: "arkiv-evaluation", sessionId });
   const arkivEvaluation = evalEntities.length > 0 ? evalEntities[0].toJson() : null;
+  if (evalEntities.length > 0) log(`Found: arkiv-signal \u00b7 ${evalEntities[0].key.slice(0, 10)}`);
 
   if (!readmeSummary || !codeAnalysis || !arkivEvaluation) {
     const missing = [
@@ -72,7 +60,6 @@ export async function runAgent4(
     throw new Error(`[agent4] Missing agent outputs: ${missing.join(", ")}`);
   }
 
-  // Send all three to Claude for final synthesis
   const userPrompt = `Synthesize these three agent reports into a final developer report. Return JSON only.
 
 README ANALYSIS (Agent 1):
@@ -84,7 +71,7 @@ ${JSON.stringify(codeAnalysis, null, 2)}
 ARKIV EVALUATION (Agent 3):
 ${JSON.stringify(arkivEvaluation, null, 2)}`;
 
-  console.log(`[agent4] sending to Claude for synthesis...`);
+  log("Synthesizing findings into final report...");
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 1024,
@@ -93,21 +80,25 @@ ${JSON.stringify(arkivEvaluation, null, 2)}`;
     messages: [{ role: "user", content: userPrompt }],
   });
 
-  const responseText =
-    message.content[0].type === "text" ? message.content[0].text : "";
-  console.log(`[agent4] Claude response received (${responseText.length} chars)`);
+  const responseText = message.content[0].type === "text" ? message.content[0].text : "";
+  log("Claude responded \u00b7 parsing report...");
 
-  const report = extractJson(responseText);
+  const report = extractJson(responseText) as Record<string, unknown>;
+  log(`Project: ${report.projectName || "unknown"}`);
+  log(`Final Arkiv fit score: ${report.arkivFitScore ?? "?"}/10`);
+  log(`${Array.isArray(report.recommendations) ? report.recommendations.length : 0} recommendations generated`);
 
-  // Write to Arkiv with PERSISTENT TTL (30 days)
-  console.log(`[agent4] writing final report to Arkiv (TTL: 30 days)...`);
+  const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  log("Writing final report \u00b7 TTL 30 days (persistent)...");
   const { entityKey, txHash } = await writeMemory(
     walletClient,
     report,
     { type: "final-report", sessionId, repo: `${owner}/${repo}` },
     TTL_PERSISTENT
   );
-  console.log(`[agent4] entity written: ${entityKey}`);
+  log(`Report written to Arkiv \u00b7 persists until ${expiryDate}`, { highlight: true, success: true });
 
   return { entityKey, txHash };
 }

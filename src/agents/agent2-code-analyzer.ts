@@ -9,110 +9,71 @@ import { walletClient } from "../arkiv/client";
 import { writeMemory, TTL_WORKING } from "../arkiv/memory";
 import { fetchFileTree, fetchFileContent } from "../github/fetcher";
 import { getAgentConfig } from "../config/agents";
+import type { AgentEvent } from "../index";
 
 const anthropic = new Anthropic();
 const config = getAgentConfig("agent2");
 
-/**
- * Extracts JSON from a string that may be wrapped in markdown code fences.
- */
 function extractJson(text: string): object {
   try {
     return JSON.parse(text);
   } catch {
     const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (match) {
-      try {
-        return JSON.parse(match[1].trim());
-      } catch { /* fall through */ }
+      try { return JSON.parse(match[1].trim()); } catch { /* */ }
     }
     return { raw: text };
   }
 }
 
-// File extensions worth reading for code analysis
 const CODE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".py", ".sol", ".rs", ".go"];
 const MAX_FILES_TO_READ = 5;
-const MAX_FILE_SIZE = 8000; // chars — keep within context limits
+const MAX_FILE_SIZE = 8000;
 
-/**
- * Picks the most relevant source files from a file tree for analysis.
- * Prioritizes package.json, config files, and source code files.
- */
 function pickKeyFiles(tree: { path: string; type: string }[]): string[] {
   const candidates: string[] = [];
-
-  // Always include package.json if present
-  if (tree.some((f) => f.path === "package.json")) {
-    candidates.push("package.json");
-  }
-
-  // Pick source code files, preferring shorter paths (top-level src)
+  if (tree.some((f) => f.path === "package.json")) candidates.push("package.json");
   const codeFiles = tree
-    .filter(
-      (f) =>
-        f.type === "blob" &&
-        CODE_EXTENSIONS.some((ext) => f.path.endsWith(ext)) &&
-        !f.path.includes("node_modules") &&
-        !f.path.includes(".test.") &&
-        !f.path.includes(".spec.")
-    )
+    .filter((f) => f.type === "blob" && CODE_EXTENSIONS.some((ext) => f.path.endsWith(ext)) && !f.path.includes("node_modules") && !f.path.includes(".test.") && !f.path.includes(".spec."))
     .sort((a, b) => a.path.length - b.path.length);
-
   for (const file of codeFiles) {
     if (candidates.length >= MAX_FILES_TO_READ) break;
     candidates.push(file.path);
   }
-
   return candidates;
 }
 
-/**
- * Runs Agent 2: fetches file tree and key files, asks Claude to analyze them,
- * and writes the result to Arkiv. Returns the entity key.
- */
+type Emit = (event: AgentEvent) => void;
+const noop: Emit = () => {};
+
 export async function runAgent2(
   owner: string,
   repo: string,
-  sessionId: string
+  sessionId: string,
+  onEvent: Emit = noop
 ): Promise<{ entityKey: string; txHash: string }> {
-  console.log(`[agent2] starting — analyzing code for ${owner}/${repo}`);
+  const log = (message: string, opts?: { highlight?: boolean; success?: boolean }) =>
+    onEvent({ type: "agent-log", agentId: "agent2", message, ...opts });
 
-  // Fetch the file tree
-  console.log(`[agent2] fetching file tree...`);
+  log("Fetching file tree from GitHub API...");
   const tree = await fetchFileTree(owner, repo);
-  console.log(`[agent2] file tree: ${tree.length} entries`);
+  log(`File tree fetched \u00b7 ${tree.length} files found`);
 
-  // Pick and fetch key source files
   const keyPaths = pickKeyFiles(tree);
-  console.log(`[agent2] reading ${keyPaths.length} key files: ${keyPaths.join(", ")}`);
-
   const fileContents: { path: string; content: string }[] = [];
   for (const path of keyPaths) {
+    log(`Reading: ${path}`);
     try {
       const content = await fetchFileContent(owner, repo, path);
       fileContents.push({ path, content: content.slice(0, MAX_FILE_SIZE) });
-    } catch (err) {
-      console.error(`[agent2] failed to fetch ${path}:`, err);
-    }
+    } catch { /* skip */ }
   }
 
-  // Build prompt with tree + file contents
   const treeList = tree.map((f) => f.path).join("\n");
-  const filesBlock = fileContents
-    .map((f) => `--- ${f.path} ---\n${f.content}`)
-    .join("\n\n");
+  const filesBlock = fileContents.map((f) => `--- ${f.path} ---\n${f.content}`).join("\n\n");
+  const userPrompt = `Analyze this repository and return JSON only.\n\nFILE TREE (${tree.length} files):\n${treeList}\n\nKEY SOURCE FILES:\n${filesBlock}`;
 
-  const userPrompt = `Analyze this repository and return JSON only.
-
-FILE TREE (${tree.length} files):
-${treeList}
-
-KEY SOURCE FILES:
-${filesBlock}`;
-
-  // Send to Claude for analysis
-  console.log(`[agent2] sending to Claude for analysis...`);
+  log(`Sending ${fileContents.length} files to Claude for analysis...`);
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 1024,
@@ -121,22 +82,25 @@ ${filesBlock}`;
     messages: [{ role: "user", content: userPrompt }],
   });
 
-  const responseText =
-    message.content[0].type === "text" ? message.content[0].text : "";
-  console.log(`[agent2] Claude response received (${responseText.length} chars)`);
+  const responseText = message.content[0].type === "text" ? message.content[0].text : "";
+  log("Claude responded \u00b7 parsing analysis...");
 
-  // Parse Claude's JSON response (may be wrapped in markdown code fences)
-  const analysis = extractJson(responseText);
+  const analysis = extractJson(responseText) as Record<string, unknown>;
+  const arkivUsage = analysis.arkivUsage as Record<string, unknown> | undefined;
+  log(`Language: ${analysis.language || "?"} \u00b7 Framework: ${analysis.framework || "?"}`);
+  log(`Arkiv SDK found: ${arkivUsage?.found ? "yes" : "no"}`);
+  if (arkivUsage?.found && Array.isArray(arkivUsage.files)) {
+    log(`Arkiv usage detected in: ${arkivUsage.files.join(", ")}`);
+  }
 
-  // Write to Arkiv
-  console.log(`[agent2] writing to Arkiv...`);
+  log("Writing entity to Arkiv \u00b7 TTL 5 minutes...");
   const { entityKey, txHash } = await writeMemory(
     walletClient,
     analysis,
     { type: "code-analysis", sessionId, repo: `${owner}/${repo}` },
     TTL_WORKING
   );
-  console.log(`[agent2] entity written: ${entityKey}`);
+  log(`Entity written \u00b7 ${entityKey.slice(0, 10)}...`, { highlight: true, success: true });
 
   return { entityKey, txHash };
 }

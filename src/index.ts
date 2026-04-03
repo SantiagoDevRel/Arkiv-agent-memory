@@ -27,6 +27,8 @@ export type AgentEvent = {
   payload?: object;
   report?: object;
   sessionId?: string;
+  highlight?: boolean;
+  success?: boolean;
 };
 
 type OnEvent = (event: AgentEvent) => void;
@@ -44,28 +46,28 @@ export async function runPipeline(repoUrl: string, onEvent?: OnEvent) {
 
   // Agent 1
   emit({ type: "agent-start", agentId: "agent1", message: "Starting README analysis..." });
-  const agent1 = await runAgent1(owner, repo, sessionId);
+  const agent1 = await runAgent1(owner, repo, sessionId, emit);
   const agent1Entities = await readMemory(publicClient, { type: "readme-summary", sessionId });
   const agent1Payload = agent1Entities.length > 0 ? agent1Entities[0].toJson() : {};
   emit({ type: "agent-done", agentId: "agent1", entityId: agent1.entityKey, txHash: agent1.txHash, payload: agent1Payload, message: "README analysis complete" });
 
   // Agent 2
   emit({ type: "agent-start", agentId: "agent2", message: "Starting code analysis..." });
-  const agent2 = await runAgent2(owner, repo, sessionId);
+  const agent2 = await runAgent2(owner, repo, sessionId, emit);
   const agent2Entities = await readMemory(publicClient, { type: "code-analysis", sessionId });
   const agent2Payload = agent2Entities.length > 0 ? agent2Entities[0].toJson() : {};
   emit({ type: "agent-done", agentId: "agent2", entityId: agent2.entityKey, txHash: agent2.txHash, payload: agent2Payload, message: "Code analysis complete" });
 
   // Agent 3
   emit({ type: "agent-start", agentId: "agent3", message: "Starting Arkiv evaluation..." });
-  const agent3 = await runAgent3(owner, repo, sessionId);
+  const agent3 = await runAgent3(owner, repo, sessionId, emit);
   const agent3Entities = await readMemory(publicClient, { type: "arkiv-evaluation", sessionId });
   const agent3Payload = agent3Entities.length > 0 ? agent3Entities[0].toJson() : {};
   emit({ type: "agent-done", agentId: "agent3", entityId: agent3.entityKey, txHash: agent3.txHash, payload: agent3Payload, message: "Arkiv evaluation complete" });
 
   // Agent 4
   emit({ type: "agent-start", agentId: "agent4", message: "Generating final report..." });
-  const agent4 = await runAgent4(owner, repo, sessionId);
+  const agent4 = await runAgent4(owner, repo, sessionId, emit);
   const agent4Entities = await readMemory(publicClient, { type: "final-report", sessionId });
   const agent4Payload = agent4Entities.length > 0 ? agent4Entities[0].toJson() : {};
   emit({ type: "agent-done", agentId: "agent4", entityId: agent4.entityKey, txHash: agent4.txHash, payload: agent4Payload, message: "Final report generated" });
