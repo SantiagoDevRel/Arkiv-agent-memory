@@ -1,0 +1,13 @@
+{
+  "name": "arkiv-agent-memory",
+  "version": "1.0.0",
+  "description": "**Author:** Santiago Trujillo Zuluaga (@SantiagoDevRel) **Role:** Developer Relations candidate at Arkiv / Golem Network **Interview format:** 10 min tech demo · 10 min DX feedback · 20 min Q&A · 10 min my questions **Interviewers:** Seweryn Kras (Software Engineer) · Marcos Miranda (Product Manager) **Deadline:** ~1.5 weeks from April 2, 2026 **Repo:** github.com/SantiagoDevRel/arkiv-agents **Status:** Brainstorm complete. Starting build.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
