@@ -1,11 +1,10 @@
 // frontend/app/page.tsx
-// Single page dashboard for the Arkiv Agent Memory pipeline.
-// Left column: repo input, agent activity panels, live entity cards.
-// Right column: final report, past sessions.
+// Three-tab dashboard: Run | Memory | Query
+// Run tab has two layout modes: idle (centered single column) and active (two columns).
 
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import MemoryTab from "./components/MemoryTab";
 import QueryTab from "./components/QueryTab";
 import AgentCard from "./components/AgentCard";
@@ -33,13 +32,6 @@ type AgentState = {
   payload?: Record<string, unknown>;
 };
 
-type PastSession = {
-  entityId: string;
-  payload: Record<string, unknown>;
-  expiresAtBlock: string | null;
-  attributes: { key: string; value: string }[];
-};
-
 // --- Constants ---
 
 const AGENTS = [
@@ -48,8 +40,6 @@ const AGENTS = [
   { id: "agent3", name: "Arkiv Expert", order: 3 },
   { id: "agent4", name: "Reporter", order: 4 },
 ] as const;
-
-const BLOCK_TIME_SECONDS = 2;
 
 // --- Helpers ---
 
@@ -61,143 +51,95 @@ function logEntry(message: string, opts?: { highlight?: boolean; success?: boole
   return { time: now(), message, ...opts };
 }
 
-function truncateId(id: string): string {
-  if (id.length <= 16) return id;
-  return `${id.slice(0, 10)}...${id.slice(-4)}`;
-}
-
-// --- TTL Bar Component ---
-
-function TtlBar({ expiresAtBlock }: { expiresAtBlock?: string | number | bigint | null }) {
-  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-  const [totalSeconds, setTotalSeconds] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!expiresAtBlock) return;
-    const expiresAt = Number(expiresAtBlock);
-
-    let mounted = true;
-    async function fetchBlock() {
-      try {
-        const res = await fetch("/api/block");
-        const { blockNumber } = await res.json();
-        const blocksLeft = expiresAt - blockNumber;
-        const secs = Math.max(0, blocksLeft * BLOCK_TIME_SECONDS);
-        if (mounted) {
-          setSecondsLeft(secs);
-          setTotalSeconds((prev) => prev ?? secs);
-        }
-      } catch { /* ignore */ }
-    }
-
-    fetchBlock();
-    const interval = setInterval(fetchBlock, 5000);
-    return () => { mounted = false; clearInterval(interval); };
-  }, [expiresAtBlock]);
-
-  if (secondsLeft === null || totalSeconds === null || totalSeconds === 0) return null;
-
-  const pct = Math.max(0, Math.min(100, (secondsLeft / totalSeconds) * 100));
-  const color = pct > 50 ? "#1D9E75" : pct > 20 ? "#EF9F27" : "#E24B4A";
-  const label = secondsLeft > 3600
-    ? `${Math.floor(secondsLeft / 3600)}h ${Math.floor((secondsLeft % 3600) / 60)}m`
-    : secondsLeft > 60
-    ? `${Math.floor(secondsLeft / 60)}m ${secondsLeft % 60}s`
-    : `${secondsLeft}s`;
-
-  const expiresAt = new Date(Date.now() + secondsLeft * 1000);
-  const expiryDate = expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const expiryTime = expiresAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-
-  return (
-    <div className="mt-2">
-      <div className="flex justify-between text-[11px] text-[#888888] mb-1">
-        <span>TTL</span>
-        <span>{label} remaining</span>
-      </div>
-      <div className="h-1 w-full bg-[#2a2a2a] rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
-      </div>
-      {secondsLeft > 86400 && (
-        <div className="text-[10px] text-[#888888] mt-1">
-          Expires {expiryDate} at {expiryTime}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// --- Delete Button Component ---
-
-function DeleteButton({ entityKey, onDeleted }: { entityKey: string; onDeleted: () => void }) {
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleDelete() {
-    if (!window.confirm("Remove this report from Arkiv permanently?")) return;
-    setDeleting(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/entity", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: entityKey }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        onDeleted();
-      } else {
-        setError(data.error || "Delete failed");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  return (
-    <>
-      <button
-        onClick={handleDelete}
-        disabled={deleting}
-        className="w-4 h-4 flex items-center justify-center text-[#888888] hover:text-[#E24B4A] transition-colors text-xs leading-none disabled:opacity-50"
-        title="Delete from Arkiv"
-      >
-        {deleting ? "..." : "\u00d7"}
-      </button>
-      {error && <div className="text-[10px] text-[#E24B4A] mt-1">{error}</div>}
-    </>
-  );
-}
-
-// --- Report Component ---
+// --- Final Report Component (redesigned) ---
 
 function FinalReport({ report, entityId, txHash }: { report: Record<string, unknown>; entityId: string; txHash?: string }) {
   const r = report as {
     projectName?: string;
     oneLineSummary?: string;
+    goal?: string;
     techStack?: string[];
     arkivFitScore?: number;
     featuresUsed?: string[];
     featuresMissed?: string[];
     recommendations?: string[];
+    verdict?: string;
+    patternComparison?: string;
   };
 
+  const score = r.arkivFitScore ?? 0;
+  const scoreColor = score <= 3 ? "#E24B4A" : score <= 6 ? "#EF9F27" : "#1D9E75";
+
   return (
-    <div className="bg-[#111111] border border-[#534AB7]/50 rounded-lg p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#534AB7]/20 text-[#534AB7] border border-[#534AB7]/50">
-          Final Report
+    <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "20px" }}>
+      {/* Header */}
+      <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#f0f0f0", marginBottom: "4px" }}>
+        {r.projectName || "Unknown Project"}
+      </h2>
+      <p style={{ fontSize: "13px", color: "#888", marginBottom: "12px" }}>
+        {r.oneLineSummary || r.goal || ""}
+      </p>
+
+      <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "12px", marginBottom: "12px" }}>
+        {/* Metrics row */}
+        <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+          <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+            <div style={{ fontSize: "24px", fontWeight: 700, color: scoreColor }}>{score}</div>
+            <div style={{ fontSize: "10px", color: "#888", marginTop: "2px" }}>Fit Score</div>
+          </div>
+          <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+            <div style={{ fontSize: "24px", fontWeight: 700, color: "#1D9E75" }}>{r.featuresUsed?.length ?? 0}</div>
+            <div style={{ fontSize: "10px", color: "#888", marginTop: "2px" }}>Features Used</div>
+          </div>
+          <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+            <div style={{ fontSize: "24px", fontWeight: 700, color: "#EF9F27" }}>{r.featuresMissed?.length ?? 0}</div>
+            <div style={{ fontSize: "10px", color: "#888", marginTop: "2px" }}>Features Missed</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recommendations */}
+      {r.recommendations && r.recommendations.length > 0 && (
+        <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "12px", marginBottom: "12px" }}>
+          <h3 style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>
+            Recommendations
+          </h3>
+          {r.recommendations.map((rec, i) => (
+            <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", lineHeight: 1.7, marginBottom: "4px" }}>
+              <span style={{ color: "#1D9E75", flexShrink: 0 }}>+</span>
+              <span style={{ color: "#f0f0f0" }}>{rec}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Verdict */}
+      {r.verdict && (
+        <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "12px", marginBottom: "12px" }}>
+          <h3 style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
+            Verdict
+          </h3>
+          <p style={{ fontSize: "13px", color: "#888", fontStyle: "italic", lineHeight: 1.6 }}>{r.verdict}</p>
+        </div>
+      )}
+
+      {/* Pattern comparison */}
+      {r.patternComparison && (
+        <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "12px", marginBottom: "12px" }}>
+          <h3 style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
+            Compared to known projects
+          </h3>
+          <p style={{ fontSize: "13px", color: "#888", lineHeight: 1.6 }}>{r.patternComparison}</p>
+        </div>
+      )}
+
+      {/* Entity info footer */}
+      <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "10px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: "10px", background: "#0e0a1a", color: "#8b7cf8", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          final-report
         </span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1D9E75]/20 text-[#1D9E75] border border-[#1D9E75]/50">
-          30-day TTL
-        </span>
-        <span className="font-mono text-[11px] text-[#888888] ml-auto">
-          {truncateId(entityId)}
+        <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#666", flex: 1 }}>
+          {entityId.length > 14 ? `${entityId.slice(0, 8)}...${entityId.slice(-4)}` : entityId}
         </span>
         <a
           href={txHash
@@ -205,183 +147,12 @@ function FinalReport({ report, entityId, txHash }: { report: Record<string, unkn
             : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] text-[#888888] hover:text-[#f0f0f0] transition-colors"
+          style={{ fontSize: "10px", color: "#444", textDecoration: "none" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#1D9E75")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#444")}
         >
           view &rarr;
         </a>
-      </div>
-
-      <h2 className="text-xl font-semibold text-[#f0f0f0] mb-1">
-        {r.projectName || "Unknown Project"}
-      </h2>
-      <p className="text-sm text-[#888888] mb-4">{r.oneLineSummary || ""}</p>
-
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-[#1D9E75]">{r.arkivFitScore ?? "?"}</div>
-          <div className="text-[10px] text-[#888888] mt-1">Fit Score</div>
-        </div>
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-[#378ADD]">{r.featuresUsed?.length ?? 0}</div>
-          <div className="text-[10px] text-[#888888] mt-1">Features Used</div>
-        </div>
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-[#EF9F27]">{r.featuresMissed?.length ?? 0}</div>
-          <div className="text-[10px] text-[#888888] mt-1">Features Missed</div>
-        </div>
-      </div>
-
-      {r.techStack && r.techStack.length > 0 && (
-        <div className="mb-4">
-          <h3 className="text-xs font-medium text-[#888888] mb-2 uppercase tracking-wider">Tech Stack</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {r.techStack.map((t, i) => (
-              <span key={i} className="text-[11px] px-2 py-0.5 rounded bg-[#1a1a1a] border border-[#2a2a2a] text-[#f0f0f0]">
-                {t}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {r.featuresUsed && r.featuresUsed.length > 0 && (
-        <div className="mb-4">
-          <h3 className="text-xs font-medium text-[#888888] mb-2 uppercase tracking-wider">Features Used</h3>
-          <ul className="space-y-1">
-            {r.featuresUsed.map((f, i) => (
-              <li key={i} className="text-sm text-[#1D9E75] flex items-center gap-2">
-                <span className="text-[10px]">&#10003;</span> {f}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {r.featuresMissed && r.featuresMissed.length > 0 && (
-        <div className="mb-4">
-          <h3 className="text-xs font-medium text-[#888888] mb-2 uppercase tracking-wider">Features Missed</h3>
-          <ul className="space-y-1">
-            {r.featuresMissed.map((f, i) => (
-              <li key={i} className="text-sm text-[#EF9F27] flex items-center gap-2">
-                <span className="text-[10px]">&#9679;</span> {f}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {r.recommendations && r.recommendations.length > 0 && (
-        <div>
-          <h3 className="text-xs font-medium text-[#888888] mb-2 uppercase tracking-wider">Recommendations</h3>
-          <ul className="space-y-1.5">
-            {r.recommendations.map((rec, i) => (
-              <li key={i} className="text-sm text-[#f0f0f0] flex items-start gap-2">
-                <span className="text-[#534AB7] mt-0.5 text-[10px]">&#8594;</span>
-                <span>{rec}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// --- Past Sessions Component ---
-
-function PastSessions({ sessions, onDelete }: { sessions: PastSession[]; onDelete: (entityId: string) => void }) {
-  if (sessions.length === 0) return null;
-
-  return (
-    <div className="mt-6">
-      <h3 className="text-xs font-medium text-[#888888] mb-3 uppercase tracking-wider">
-        Past Sessions (30-day persistent)
-      </h3>
-      <div className="space-y-3">
-        {sessions.map((session) => {
-          const p = session.payload as Record<string, unknown>;
-          const repo = session.attributes.find((a) => a.key === "repo")?.value || "unknown";
-          return (
-            <div
-              key={session.entityId}
-              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 relative"
-            >
-              <div className="absolute top-2 right-2">
-                <DeleteButton entityKey={session.entityId} onDeleted={() => onDelete(session.entityId)} />
-              </div>
-              <div className="flex items-center justify-between mb-1 pr-6">
-                <span className="text-sm font-medium text-[#f0f0f0]">
-                  {(p.projectName as string) || repo}
-                </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#534AB7]/20 text-[#534AB7]">
-                  {(p.arkivFitScore as number) ?? "?"}/10
-                </span>
-              </div>
-              <p className="text-[11px] text-[#888888] mb-1">{(p.oneLineSummary as string) || ""}</p>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] text-[#888888]">
-                  {truncateId(session.entityId)}
-                </span>
-                <span className="text-[10px] text-[#888888]">{repo}</span>
-              </div>
-              <TtlBar expiresAtBlock={session.expiresAtBlock} />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// --- Score Comparison Bar ---
-
-function ScoreComparison({
-  current,
-  past,
-}: {
-  current: Record<string, unknown>;
-  past: PastSession[];
-}) {
-  const scores = past
-    .map((s) => ({
-      name: (s.payload.projectName as string) || "?",
-      score: (s.payload.arkivFitScore as number) ?? 0,
-      isCurrent: false,
-    }))
-    .concat([
-      {
-        name: (current.projectName as string) || "Current",
-        score: (current.arkivFitScore as number) ?? 0,
-        isCurrent: true,
-      },
-    ])
-    .sort((a, b) => b.score - a.score);
-
-  if (scores.length < 2) return null;
-
-  return (
-    <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-4 mt-4">
-      <h3 className="text-xs font-medium text-[#888888] mb-3 uppercase tracking-wider">
-        Cross-Project Comparison
-      </h3>
-      <div className="space-y-2">
-        {scores.map((s, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <span className="text-[11px] text-[#888888] w-24 truncate">{s.name}</span>
-            <div className="flex-1 h-3 bg-[#1a1a1a] rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${(s.score / 10) * 100}%`,
-                  backgroundColor: s.isCurrent ? "#534AB7" : "#378ADD",
-                }}
-              />
-            </div>
-            <span className={`text-xs font-mono ${s.isCurrent ? "text-[#534AB7]" : "text-[#888888]"}`}>
-              {s.score}/10
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -401,6 +172,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>("run");
   const [repoUrl, setRepoUrl] = useState("https://github.com/fabianferno/clink");
   const [running, setRunning] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<"idle" | "active">("idle");
   const [agents, setAgents] = useState<Record<string, AgentState>>({
     agent1: { status: "idle", logs: [] },
     agent2: { status: "idle", logs: [] },
@@ -408,23 +180,13 @@ export default function Home() {
     agent4: { status: "idle", logs: [] },
   });
   const [finalReport, setFinalReport] = useState<{ report: Record<string, unknown>; entityId: string; txHash?: string } | null>(null);
-  const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-
-  // Fetch past sessions on mount
-  useEffect(() => {
-    fetch("/api/sessions?type=final-report")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.sessions) setPastSessions(data.sessions);
-      })
-      .catch(() => {});
-  }, []);
 
   const handleRun = useCallback(async () => {
     if (running) return;
     setRunning(true);
+    setLayoutMode("active");
     setError(null);
     setFinalReport(null);
     setAgents({
@@ -508,13 +270,6 @@ export default function Home() {
               entityId: event.entityId || "",
               txHash: event.txHash,
             });
-            // Refresh past sessions
-            fetch("/api/sessions?type=final-report")
-              .then((r) => r.json())
-              .then((data) => {
-                if (data.sessions) setPastSessions(data.sessions);
-              })
-              .catch(() => {});
           } else if (event.type === "error") {
             setError(event.message || "Unknown error");
           }
@@ -528,6 +283,50 @@ export default function Home() {
       setRunning(false);
     }
   }, [repoUrl, running]);
+
+  // --- Shared input block ---
+  const inputBlock = (
+    <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "16px", marginBottom: "12px" }}>
+      <label style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>
+        GitHub Repository URL
+      </label>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <input
+          type="text"
+          value={repoUrl}
+          onChange={(e) => setRepoUrl(e.target.value)}
+          placeholder="https://github.com/owner/repo"
+          disabled={running}
+          className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] placeholder-[#888888] focus:outline-none focus:border-[#534AB7] disabled:opacity-50"
+        />
+        <button
+          onClick={handleRun}
+          disabled={running || !repoUrl}
+          className="px-4 py-2 bg-[#534AB7] text-white text-sm font-medium rounded-lg hover:bg-[#6355c7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {running ? "Running..." : "Analyze"}
+        </button>
+      </div>
+    </div>
+  );
+
+  // --- Agent cards block ---
+  const agentCards = (
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      {AGENTS.map((agent) => (
+        <AgentCard
+          key={agent.id}
+          agentId={agent.id as "agent1" | "agent2" | "agent3" | "agent4"}
+          name={agent.name}
+          status={agents[agent.id].status}
+          logs={agents[agent.id].logs}
+          entityId={agents[agent.id].entityId}
+          txHash={agents[agent.id].txHash}
+          payload={agents[agent.id].payload}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <main className="min-h-screen p-6 max-w-7xl mx-auto">
@@ -555,85 +354,69 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Run tab — always mounted, visibility toggled to preserve state */}
+      {/* Run tab — always mounted, visibility toggled */}
       <div style={{ display: activeTab === "run" ? "block" : "none" }}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="lg:max-h-[calc(100vh-160px)] lg:overflow-y-auto lg:pr-2">
-            <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-4 mb-4">
-              <label className="text-xs font-medium text-[#888888] uppercase tracking-wider block mb-2">
-                GitHub Repository URL
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={repoUrl}
-                  onChange={(e) => setRepoUrl(e.target.value)}
-                  placeholder="https://github.com/owner/repo"
-                  disabled={running}
-                  className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] placeholder-[#888888] focus:outline-none focus:border-[#534AB7] disabled:opacity-50"
-                />
-                <button
-                  onClick={handleRun}
-                  disabled={running || !repoUrl}
-                  className="px-4 py-2 bg-[#534AB7] text-white text-sm font-medium rounded-lg hover:bg-[#6355c7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {running ? "Running..." : "Analyze"}
-                </button>
-              </div>
-            </div>
 
+        {/* MODE A — Idle: single centered column */}
+        {layoutMode === "idle" && (
+          <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+            {inputBlock}
             {error && (
-              <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 text-[#E24B4A] text-sm rounded-lg p-3 mb-4">
+              <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 text-[#E24B4A] text-sm rounded-lg p-3 mb-3">
                 {error}
               </div>
             )}
-
-            {AGENTS.map((agent) => (
-              <AgentCard
-                key={agent.id}
-                agentId={agent.id as "agent1" | "agent2" | "agent3" | "agent4"}
-                name={agent.name}
-                status={agents[agent.id].status}
-                logs={agents[agent.id].logs}
-                entityId={agents[agent.id].entityId}
-                txHash={agents[agent.id].txHash}
-                payload={agents[agent.id].payload}
-              />
-            ))}
+            {agentCards}
           </div>
+        )}
 
-          {/* Right Column */}
-          <div>
-            {finalReport ? (
-              <>
+        {/* MODE B — Active: two columns */}
+        {layoutMode === "active" && (
+          <div style={{ display: "grid", gridTemplateColumns: "55% 45%", gap: "20px" }}>
+            {/* Left column — grows naturally, no internal scroll */}
+            <div>
+              {inputBlock}
+              {error && (
+                <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 text-[#E24B4A] text-sm rounded-lg p-3 mb-3">
+                  {error}
+                </div>
+              )}
+              {agentCards}
+            </div>
+
+            {/* Right column — sticky report */}
+            <div style={{ position: "sticky", top: "20px", alignSelf: "start", maxHeight: "calc(100vh - 120px)", overflowY: "auto" }}>
+              {finalReport ? (
                 <FinalReport report={finalReport.report} entityId={finalReport.entityId} txHash={finalReport.txHash} />
-                <ScoreComparison current={finalReport.report} past={pastSessions} />
-              </>
-            ) : (
-              <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-8 text-center">
-                <p className="text-[#888888] text-sm">
-                  {running
-                    ? "Pipeline running \u2014 report will appear here..."
-                    : "Enter a GitHub repo URL and click Analyze to start"}
-                </p>
-              </div>
-            )}
-
-            <PastSessions
-              sessions={pastSessions}
-              onDelete={(entityId) => {
-                setPastSessions((prev) => prev.filter((s) => s.entityId !== entityId));
-              }}
-            />
+              ) : (
+                <div style={{
+                  background: "#111",
+                  border: "1px solid #2a2a2a",
+                  borderRadius: "12px",
+                  padding: "40px 20px",
+                  textAlign: "center",
+                }}>
+                  {running ? (
+                    <div>
+                      <div className="thinking-dots" style={{ justifyContent: "center", marginBottom: "12px" }}>
+                        <span /><span /><span />
+                      </div>
+                      <p style={{ color: "#888", fontSize: "13px" }}>Pipeline running &mdash; report will appear here...</p>
+                    </div>
+                  ) : (
+                    <p style={{ color: "#555", fontSize: "13px" }}>Report will appear here after analysis</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Memory tab — remounts on each switch */}
+      {/* Memory tab */}
       {activeTab === "memory" && <MemoryTab />}
 
-      {/* Query tab — remounts on each switch */}
+      {/* Query tab */}
       {activeTab === "query" && <QueryTab />}
     </main>
   );
