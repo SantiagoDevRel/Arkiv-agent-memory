@@ -8,6 +8,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import MemoryTab from "./components/MemoryTab";
 import QueryTab from "./components/QueryTab";
+import AgentCard from "./components/AgentCard";
 
 // --- Types ---
 
@@ -22,7 +23,7 @@ type AgentEvent = {
   sessionId?: string;
 };
 
-type LogEntry = { time: string; message: string };
+type LogEntry = { time: string; message: string; highlight?: boolean; success?: boolean };
 
 type AgentState = {
   status: "idle" | "running" | "done" | "waiting";
@@ -56,31 +57,13 @@ function now(): string {
   return new Date().toLocaleTimeString("en-US", { hour12: false });
 }
 
-function logEntry(message: string): LogEntry {
-  return { time: now(), message };
+function logEntry(message: string, opts?: { highlight?: boolean; success?: boolean }): LogEntry {
+  return { time: now(), message, ...opts };
 }
 
 function truncateId(id: string): string {
   if (id.length <= 16) return id;
   return `${id.slice(0, 10)}...${id.slice(-4)}`;
-}
-
-function statusColor(status: AgentState["status"]): string {
-  switch (status) {
-    case "running": return "bg-[#EF9F27]";
-    case "done": return "bg-[#1D9E75]";
-    case "waiting": return "bg-[#378ADD]";
-    default: return "bg-[#888888]";
-  }
-}
-
-function statusLabel(status: AgentState["status"]): string {
-  switch (status) {
-    case "running": return "Running";
-    case "done": return "Done";
-    case "waiting": return "Waiting";
-    default: return "Idle";
-  }
 }
 
 // --- TTL Bar Component ---
@@ -188,92 +171,6 @@ function DeleteButton({ entityKey, onDeleted }: { entityKey: string; onDeleted: 
       </button>
       {error && <div className="text-[10px] text-[#E24B4A] mt-1">{error}</div>}
     </>
-  );
-}
-
-// --- Agent Panel Component ---
-
-function AgentPanel({ agent, state, onEntityDeleted }: { agent: typeof AGENTS[number]; state: AgentState; onEntityDeleted?: (agentId: string) => void }) {
-  const logContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    logContainerRef.current?.scrollTo({
-      top: logContainerRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [state.logs.length]);
-
-  return (
-    <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-4 mb-3">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-2 h-2 rounded-full ${statusColor(state.status)} ${
-              state.status === "running" ? "animate-pulse-dot" : ""
-            }`}
-          />
-          <span className="text-sm font-medium text-[#f0f0f0]">{agent.name}</span>
-        </div>
-        <span
-          className={`text-[10px] px-2 py-0.5 rounded-full border ${
-            state.status === "done"
-              ? "border-[#1D9E75] text-[#1D9E75]"
-              : state.status === "running"
-              ? "border-[#EF9F27] text-[#EF9F27]"
-              : state.status === "waiting"
-              ? "border-[#378ADD] text-[#378ADD]"
-              : "border-[#888888] text-[#888888]"
-          }`}
-        >
-          {statusLabel(state.status)}
-        </span>
-      </div>
-
-      {state.logs.length > 0 && (
-        <div
-          ref={logContainerRef}
-          className="bg-[#0a0a0a] rounded p-2 max-h-[160px] overflow-y-auto scroll-smooth font-mono text-[11px] leading-[1.6] text-[#888888]"
-        >
-          {state.logs.map((log, i) => (
-            <div key={i}>
-              <span className="text-[#555555] mr-2">{log.time}</span>
-              {log.message}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {state.entityId && (
-        <div className="mt-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded p-3 relative">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1D9E75]/20 text-[#1D9E75]">
-              entity
-            </span>
-            <span className="font-mono text-[11px] text-[#888888]">
-              {truncateId(state.entityId)}
-            </span>
-            <a
-              href={state.txHash
-                ? `https://explorer.kaolin.hoodi.arkiv.network/tx/${state.txHash}`
-                : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${state.entityId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] text-[#888888] hover:text-[#f0f0f0] transition-colors"
-            >
-              view &rarr;
-            </a>
-            <span className="ml-auto">
-              <DeleteButton entityKey={state.entityId} onDeleted={() => onEntityDeleted?.(agent.id)} />
-            </span>
-          </div>
-          {state.payload && (
-            <pre className="text-[10px] text-[#888888] mt-1 whitespace-pre-wrap break-all max-h-24 overflow-y-auto">
-              {JSON.stringify(state.payload, null, 2).slice(0, 500)}
-            </pre>
-          )}
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -583,7 +480,7 @@ export default function Home() {
               [event.agentId!]: {
                 ...prev[event.agentId!],
                 status: "running",
-                logs: [...prev[event.agentId!].logs, logEntry(event.message || "Starting...")],
+                logs: [...prev[event.agentId!].logs, logEntry(event.message || "Starting...", { highlight: true })],
               },
             }));
           } else if (event.type === "agent-log" && event.agentId) {
@@ -599,7 +496,7 @@ export default function Home() {
               ...prev,
               [event.agentId!]: {
                 status: "done",
-                logs: [...prev[event.agentId!].logs, logEntry(event.message || "Done")],
+                logs: [...prev[event.agentId!].logs, logEntry("Entity written to Arkiv", { success: true })],
                 entityId: event.entityId,
                 txHash: event.txHash,
                 payload: event.payload as Record<string, unknown>,
@@ -662,7 +559,7 @@ export default function Home() {
       <div style={{ display: activeTab === "run" ? "block" : "none" }}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
-          <div>
+          <div className="lg:max-h-[calc(100vh-160px)] lg:overflow-y-auto lg:pr-2">
             <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-4 mb-4">
               <label className="text-xs font-medium text-[#888888] uppercase tracking-wider block mb-2">
                 GitHub Repository URL
@@ -693,16 +590,15 @@ export default function Home() {
             )}
 
             {AGENTS.map((agent) => (
-              <AgentPanel
+              <AgentCard
                 key={agent.id}
-                agent={agent}
-                state={agents[agent.id]}
-                onEntityDeleted={(agentId) => {
-                  setAgents((prev) => ({
-                    ...prev,
-                    [agentId]: { ...prev[agentId], entityId: undefined, txHash: undefined, payload: undefined },
-                  }));
-                }}
+                agentId={agent.id as "agent1" | "agent2" | "agent3" | "agent4"}
+                name={agent.name}
+                status={agents[agent.id].status}
+                logs={agents[agent.id].logs}
+                entityId={agents[agent.id].entityId}
+                txHash={agents[agent.id].txHash}
+                payload={agents[agent.id].payload}
               />
             ))}
           </div>

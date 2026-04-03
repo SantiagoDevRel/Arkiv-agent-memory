@@ -20,3 +20,166 @@ body {
 .animate-pulse-dot {
   animation: pulse-dot 1.5s ease-in-out infinite;
 }
+
+/* ============================================
+   ROBOT AGENT ANIMATIONS
+   ============================================ */
+
+@keyframes eyeBlink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes antennaPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.6); }
+}
+
+@keyframes mouthThink {
+  0%, 100% { width: 12px; margin-left: 0px; }
+  50% { width: 6px; margin-left: 2px; }
+}
+
+@keyframes dotBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes cardGlowAmber {
+  0%, 100% { box-shadow: 0 0 10px rgba(239,159,39,0.12); }
+  50% { box-shadow: 0 0 18px rgba(239,159,39,0.22); }
+}
+
+@keyframes cardGlowGreen {
+  0%, 100% { box-shadow: 0 0 8px rgba(29,158,117,0.10); }
+  50% { box-shadow: 0 0 14px rgba(29,158,117,0.18); }
+}
+
+/* Robot base */
+.robot { width: 40px; height: 40px; position: relative; flex-shrink: 0; }
+
+.robot-antenna {
+  width: 2px; height: 8px;
+  background: #333;
+  position: absolute; top: 0px; left: 50%;
+  transform: translateX(-50%);
+  border-radius: 1px;
+}
+
+.robot-antenna::after {
+  content: '';
+  display: block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #444;
+  position: absolute; top: -5px; left: -2px;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.robot-head {
+  width: 30px; height: 24px;
+  background: #1a1a1a;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 6px;
+  position: absolute; top: 7px; left: 5px;
+  display: flex; align-items: center;
+  justify-content: center; gap: 5px;
+  flex-direction: column;
+  transition: border-color 0.3s;
+}
+
+.robot-eyes {
+  display: flex; gap: 5px; align-items: center;
+}
+
+.robot-eye {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #333;
+  transition: background 0.3s, box-shadow 0.3s, border-radius 0.3s;
+}
+
+.robot-mouth {
+  width: 12px; height: 2px;
+  background: #333;
+  border-radius: 1px;
+  transition: all 0.3s;
+}
+
+/* IDLE state */
+.robot-idle .robot-eye { background: #333; }
+.robot-idle .robot-antenna::after { background: #333; }
+.robot-idle .robot-head { border-color: #222; }
+
+/* WAITING state */
+.robot-waiting .robot-eye { background: #378ADD; box-shadow: 0 0 4px rgba(55,138,221,0.6); }
+.robot-waiting .robot-antenna::after {
+  background: #378ADD;
+  box-shadow: 0 0 5px rgba(55,138,221,0.8);
+  animation: antennaPulse 1.8s ease-in-out infinite;
+}
+.robot-waiting .robot-head { border-color: #1a3a5a; }
+
+/* RUNNING state */
+.robot-running .robot-eye {
+  background: #EF9F27;
+  box-shadow: 0 0 5px rgba(239,159,39,0.9);
+  animation: eyeBlink 2.5s ease-in-out infinite;
+}
+.robot-running .robot-eye:last-child { animation-delay: 0.15s; }
+.robot-running .robot-antenna::after {
+  background: #EF9F27;
+  box-shadow: 0 0 7px rgba(239,159,39,1);
+  animation: antennaPulse 0.7s ease-in-out infinite;
+}
+.robot-running .robot-mouth { animation: mouthThink 1.1s ease-in-out infinite; }
+.robot-running .robot-head { border-color: #3a2a00; }
+
+/* DONE state */
+.robot-done .robot-eye {
+  background: #1D9E75;
+  box-shadow: 0 0 4px rgba(29,158,117,0.8);
+  border-radius: 2px;
+}
+.robot-done .robot-antenna::after {
+  background: #1D9E75;
+  box-shadow: 0 0 6px rgba(29,158,117,0.9);
+}
+.robot-done .robot-mouth {
+  width: 14px; height: 5px;
+  background: transparent;
+  border: 1.5px solid #1D9E75;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+}
+.robot-done .robot-head { border-color: #0a3a20; }
+
+/* Thinking dots */
+.thinking-dots { display: flex; gap: 3px; align-items: center; }
+.thinking-dots span {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #EF9F27;
+  animation: dotBounce 0.9s ease-in-out infinite;
+}
+.thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.30s; }
+
+/* Log container */
+.agent-log-container {
+  height: 140px;
+  min-height: 140px;
+  overflow-y: auto;
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a #0a0a0a;
+}
+.agent-log-container::-webkit-scrollbar { width: 4px; }
+.agent-log-container::-webkit-scrollbar-track { background: #0a0a0a; }
+.agent-log-container::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
