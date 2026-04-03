@@ -183,3 +183,14 @@ body {
 .agent-log-container::-webkit-scrollbar { width: 4px; }
 .agent-log-container::-webkit-scrollbar-track { background: #0a0a0a; }
 .agent-log-container::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
+/* Modal + button animations */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes buttonReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,6 +1,6 @@
 // frontend/app/page.tsx
 // Three-tab dashboard: Run | Memory | Query
-// Run tab has two layout modes: idle (centered single column) and active (two columns).
+// Run tab: 2x2 agent grid + "SEE FINAL RESULT" button + modal
 
 "use client";
 
@@ -41,6 +41,13 @@ const AGENTS = [
   { id: "agent4", name: "Reporter", order: 4 },
 ] as const;
 
+const PROVENANCE = [
+  { agentId: "agent1", label: "readme-summary", bg: "#001a10", color: "#1D9E75" },
+  { agentId: "agent2", label: "code-analysis", bg: "#0a1a2a", color: "#378ADD" },
+  { agentId: "agent3", label: "arkiv-signal", bg: "#1a1000", color: "#EF9F27" },
+  { agentId: "agent4", label: "final-report", bg: "#0e0a1a", color: "#8b7cf8" },
+];
+
 // --- Helpers ---
 
 function now(): string {
@@ -51,108 +58,210 @@ function logEntry(message: string, opts?: { highlight?: boolean; success?: boole
   return { time: now(), message, ...opts };
 }
 
-// --- Final Report Component (redesigned) ---
+function truncKey(id: string): string {
+  if (id.length <= 14) return id;
+  return `${id.slice(0, 8)}...${id.slice(-4)}`;
+}
 
-function FinalReport({ report, entityId, txHash }: { report: Record<string, unknown>; entityId: string; txHash?: string }) {
-  const r = report as {
-    projectName?: string;
-    oneLineSummary?: string;
-    goal?: string;
-    techStack?: string[];
-    arkivFitScore?: number;
-    featuresUsed?: string[];
-    featuresMissed?: string[];
-    recommendations?: string[];
-    verdict?: string;
-    patternComparison?: string;
-  };
+function explorerUrl(txHash?: string, entityId?: string): string {
+  if (txHash) return `https://explorer.kaolin.hoodi.arkiv.network/tx/${txHash}`;
+  if (entityId) return `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`;
+  return "#";
+}
 
-  const score = r.arkivFitScore ?? 0;
+// --- Section title helper ---
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <h3 style={{ fontSize: "10px", color: "#444", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px", fontWeight: 700 }}>
+      {children}
+    </h3>
+  );
+}
+
+// --- Report Modal ---
+
+function ReportModal({
+  agents,
+  onClose,
+}: {
+  agents: Record<string, AgentState>;
+  onClose: () => void;
+}) {
+  const a4 = agents.agent4.payload as Record<string, unknown> | undefined;
+  const a3 = agents.agent3.payload as Record<string, unknown> | undefined;
+  if (!a4) return null;
+
+  const projectName = (a4.projectName as string) || "Unknown Project";
+  const summary = (a4.oneLineSummary as string) || (a4.goal as string) || "";
+  const techStack = (a4.techStack as string[]) || [];
+  const score = (a4.arkivFitScore as number) ?? 0;
   const scoreColor = score <= 3 ? "#E24B4A" : score <= 6 ? "#EF9F27" : "#1D9E75";
+  const featuresUsed = (a4.featuresUsed as string[]) || [];
+  const featuresMissed = (a4.featuresMissed as string[]) || [];
+  const recommendations = (a4.recommendations as string[]) || [];
+  const verdict = (a3?.verdict as string) || (a4.verdict as string) || "";
+  const patternComparison = (a3?.patternComparison as string) || "";
+  const repo = (a4.repo as string) || "";
 
   return (
-    <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "20px" }}>
-      {/* Header */}
-      <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#f0f0f0", marginBottom: "4px" }}>
-        {r.projectName || "Unknown Project"}
-      </h2>
-      <p style={{ fontSize: "13px", color: "#888", marginBottom: "12px" }}>
-        {r.oneLineSummary || r.goal || ""}
-      </p>
-
-      <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "12px", marginBottom: "12px" }}>
-        {/* Metrics row */}
-        <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
-          <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: scoreColor }}>{score}</div>
-            <div style={{ fontSize: "10px", color: "#888", marginTop: "2px" }}>Fit Score</div>
-          </div>
-          <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#1D9E75" }}>{r.featuresUsed?.length ?? 0}</div>
-            <div style={{ fontSize: "10px", color: "#888", marginTop: "2px" }}>Features Used</div>
-          </div>
-          <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#EF9F27" }}>{r.featuresMissed?.length ?? 0}</div>
-            <div style={{ fontSize: "10px", color: "#888", marginTop: "2px" }}>Features Missed</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recommendations */}
-      {r.recommendations && r.recommendations.length > 0 && (
-        <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "12px", marginBottom: "12px" }}>
-          <h3 style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>
-            Recommendations
-          </h3>
-          {r.recommendations.map((rec, i) => (
-            <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", lineHeight: 1.7, marginBottom: "4px" }}>
-              <span style={{ color: "#1D9E75", flexShrink: 0 }}>+</span>
-              <span style={{ color: "#f0f0f0" }}>{rec}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Verdict */}
-      {r.verdict && (
-        <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "12px", marginBottom: "12px" }}>
-          <h3 style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
-            Verdict
-          </h3>
-          <p style={{ fontSize: "13px", color: "#888", fontStyle: "italic", lineHeight: 1.6 }}>{r.verdict}</p>
-        </div>
-      )}
-
-      {/* Pattern comparison */}
-      {r.patternComparison && (
-        <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "12px", marginBottom: "12px" }}>
-          <h3 style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
-            Compared to known projects
-          </h3>
-          <p style={{ fontSize: "13px", color: "#888", lineHeight: 1.6 }}>{r.patternComparison}</p>
-        </div>
-      )}
-
-      {/* Entity info footer */}
-      <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "10px", display: "flex", alignItems: "center", gap: "8px" }}>
-        <span style={{ fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: "10px", background: "#0e0a1a", color: "#8b7cf8", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          final-report
-        </span>
-        <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#666", flex: 1 }}>
-          {entityId.length > 14 ? `${entityId.slice(0, 8)}...${entityId.slice(-4)}` : entityId}
-        </span>
-        <a
-          href={txHash
-            ? `https://explorer.kaolin.hoodi.arkiv.network/tx/${txHash}`
-            : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontSize: "10px", color: "#444", textDecoration: "none" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#1D9E75")}
+    <div
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: "#111",
+          border: "1px solid #2a2a2a",
+          borderRadius: "16px",
+          width: "min(860px, 92vw)",
+          maxHeight: "85vh",
+          overflowY: "auto",
+          padding: "28px 32px",
+          position: "relative",
+          scrollbarWidth: "thin",
+          scrollbarColor: "#2a2a2a #111",
+          animation: "modalFadeIn 0.25s ease",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          style={{ position: "absolute", top: "16px", right: "20px", background: "none", border: "none", color: "#444", fontSize: "20px", cursor: "pointer", lineHeight: 1 }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f0f0")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#444")}
         >
-          view &rarr;
-        </a>
+          &times;
+        </button>
+
+        {/* SECTION A — Project header */}
+        <div style={{ paddingBottom: "16px" }}>
+          <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#f0f0f0", fontFamily: "'Courier New', monospace" }}>
+            {projectName}
+          </h2>
+          <p style={{ fontSize: "13px", color: "#888", marginTop: "6px" }}>{summary}</p>
+          {repo && (
+            <span style={{ display: "inline-block", background: "#1a1a1a", color: "#666", fontSize: "10px", padding: "2px 8px", borderRadius: "10px", marginTop: "8px" }}>
+              {repo}
+            </span>
+          )}
+        </div>
+
+        {/* SECTION B — Metrics */}
+        <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
+          <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "28px", fontWeight: 700, color: scoreColor }}>{score}</div>
+              <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: "4px" }}>Fit Score</div>
+            </div>
+            <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "28px", fontWeight: 700, color: "#1D9E75" }}>{featuresUsed.length}</div>
+              <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: "4px" }}>Features Used</div>
+            </div>
+            <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "28px", fontWeight: 700, color: "#EF9F27" }}>{featuresMissed.length}</div>
+              <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: "4px" }}>Features Missed</div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION C — Tech stack */}
+        {techStack.length > 0 && (
+          <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
+            <SectionTitle>Tech Stack</SectionTitle>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {techStack.map((t, i) => (
+                <span key={i} style={{ background: "#1a1a1a", color: "#888", fontSize: "11px", padding: "3px 10px", borderRadius: "20px", border: "1px solid #2a2a2a" }}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION D — Features used */}
+        {featuresUsed.length > 0 && (
+          <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
+            <SectionTitle>Features Used</SectionTitle>
+            {featuresUsed.map((f, i) => (
+              <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", fontFamily: "monospace", marginBottom: "3px" }}>
+                <span style={{ color: "#1D9E75" }}>&check;</span>
+                <span style={{ color: "#1D9E75" }}>{f}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* SECTION E — Features missed */}
+        {featuresMissed.length > 0 && (
+          <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
+            <SectionTitle>Features Missed</SectionTitle>
+            {featuresMissed.map((f, i) => (
+              <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", fontFamily: "monospace", marginBottom: "3px" }}>
+                <span style={{ color: "#EF9F27" }}>&cir;</span>
+                <span style={{ color: "#EF9F27" }}>{f}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* SECTION F — Recommendations */}
+        {recommendations.length > 0 && (
+          <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
+            <SectionTitle>Recommendations</SectionTitle>
+            {recommendations.map((rec, i) => (
+              <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", lineHeight: 1.8, marginBottom: "2px" }}>
+                <span style={{ color: "#1D9E75", flexShrink: 0 }}>+</span>
+                <span style={{ color: "#f0f0f0" }}>{rec}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* SECTION G — Verdict + pattern comparison */}
+        {verdict && (
+          <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
+            <SectionTitle>Verdict</SectionTitle>
+            <p style={{ fontSize: "13px", color: "#888", fontStyle: "italic", lineHeight: 1.6 }}>{verdict}</p>
+          </div>
+        )}
+        {patternComparison && (
+          <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
+            <SectionTitle>Compared to Known Projects</SectionTitle>
+            <p style={{ fontSize: "13px", color: "#888", lineHeight: 1.6 }}>{patternComparison}</p>
+          </div>
+        )}
+
+        {/* SECTION H — Entity provenance */}
+        <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0 0" }}>
+          <SectionTitle>Stored on Arkiv</SectionTitle>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {PROVENANCE.map((p) => {
+              const a = agents[p.agentId];
+              if (!a?.entityId) return null;
+              return (
+                <div key={p.agentId} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: "10px", background: p.bg, color: p.color, textTransform: "uppercase", letterSpacing: "0.08em", flexShrink: 0 }}>
+                    {p.label}
+                  </span>
+                  <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#666", flex: 1 }}>
+                    {truncKey(a.entityId)}
+                  </span>
+                  <a
+                    href={explorerUrl(a.txHash, a.entityId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: "10px", color: "#444", textDecoration: "none" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#1D9E75")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#444")}
+                  >
+                    view &rarr;
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -172,23 +281,23 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>("run");
   const [repoUrl, setRepoUrl] = useState("https://github.com/fabianferno/clink");
   const [running, setRunning] = useState(false);
-  const [layoutMode, setLayoutMode] = useState<"idle" | "active">("idle");
+  const [showModal, setShowModal] = useState(false);
   const [agents, setAgents] = useState<Record<string, AgentState>>({
     agent1: { status: "idle", logs: [] },
     agent2: { status: "idle", logs: [] },
     agent3: { status: "idle", logs: [] },
     agent4: { status: "idle", logs: [] },
   });
-  const [finalReport, setFinalReport] = useState<{ report: Record<string, unknown>; entityId: string; txHash?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const agent4Done = agents.agent4.status === "done";
 
   const handleRun = useCallback(async () => {
     if (running) return;
     setRunning(true);
-    setLayoutMode("active");
+    setShowModal(false);
     setError(null);
-    setFinalReport(null);
     setAgents({
       agent1: { status: "waiting", logs: [] },
       agent2: { status: "waiting", logs: [] },
@@ -264,12 +373,6 @@ export default function Home() {
                 payload: event.payload as Record<string, unknown>,
               },
             }));
-          } else if (event.type === "pipeline-done") {
-            setFinalReport({
-              report: (event.report || {}) as Record<string, unknown>,
-              entityId: event.entityId || "",
-              txHash: event.txHash,
-            });
           } else if (event.type === "error") {
             setError(event.message || "Unknown error");
           }
@@ -283,50 +386,6 @@ export default function Home() {
       setRunning(false);
     }
   }, [repoUrl, running]);
-
-  // --- Shared input block ---
-  const inputBlock = (
-    <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "16px", marginBottom: "12px" }}>
-      <label style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>
-        GitHub Repository URL
-      </label>
-      <div style={{ display: "flex", gap: "8px" }}>
-        <input
-          type="text"
-          value={repoUrl}
-          onChange={(e) => setRepoUrl(e.target.value)}
-          placeholder="https://github.com/owner/repo"
-          disabled={running}
-          className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] placeholder-[#888888] focus:outline-none focus:border-[#534AB7] disabled:opacity-50"
-        />
-        <button
-          onClick={handleRun}
-          disabled={running || !repoUrl}
-          className="px-4 py-2 bg-[#534AB7] text-white text-sm font-medium rounded-lg hover:bg-[#6355c7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {running ? "Running..." : "Analyze"}
-        </button>
-      </div>
-    </div>
-  );
-
-  // --- Agent cards block ---
-  const agentCards = (
-    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-      {AGENTS.map((agent) => (
-        <AgentCard
-          key={agent.id}
-          agentId={agent.id as "agent1" | "agent2" | "agent3" | "agent4"}
-          name={agent.name}
-          status={agents[agent.id].status}
-          logs={agents[agent.id].logs}
-          entityId={agents[agent.id].entityId}
-          txHash={agents[agent.id].txHash}
-          payload={agents[agent.id].payload}
-        />
-      ))}
-    </div>
-  );
 
   return (
     <main className="min-h-screen p-6 max-w-7xl mx-auto">
@@ -356,61 +415,81 @@ export default function Home() {
 
       {/* Run tab — always mounted, visibility toggled */}
       <div style={{ display: activeTab === "run" ? "block" : "none" }}>
-
-        {/* MODE A — Idle: single centered column */}
-        {layoutMode === "idle" && (
-          <div style={{ maxWidth: "680px", margin: "0 auto" }}>
-            {inputBlock}
-            {error && (
-              <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 text-[#E24B4A] text-sm rounded-lg p-3 mb-3">
-                {error}
-              </div>
-            )}
-            {agentCards}
-          </div>
-        )}
-
-        {/* MODE B — Active: two columns */}
-        {layoutMode === "active" && (
-          <div style={{ display: "grid", gridTemplateColumns: "55% 45%", gap: "20px" }}>
-            {/* Left column — grows naturally, no internal scroll */}
-            <div>
-              {inputBlock}
-              {error && (
-                <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 text-[#E24B4A] text-sm rounded-lg p-3 mb-3">
-                  {error}
-                </div>
-              )}
-              {agentCards}
-            </div>
-
-            {/* Right column — sticky report */}
-            <div style={{ position: "sticky", top: "20px", alignSelf: "start", maxHeight: "calc(100vh - 120px)", overflowY: "auto" }}>
-              {finalReport ? (
-                <FinalReport report={finalReport.report} entityId={finalReport.entityId} txHash={finalReport.txHash} />
-              ) : (
-                <div style={{
-                  background: "#111",
-                  border: "1px solid #2a2a2a",
-                  borderRadius: "12px",
-                  padding: "40px 20px",
-                  textAlign: "center",
-                }}>
-                  {running ? (
-                    <div>
-                      <div className="thinking-dots" style={{ justifyContent: "center", marginBottom: "12px" }}>
-                        <span /><span /><span />
-                      </div>
-                      <p style={{ color: "#888", fontSize: "13px" }}>Pipeline running &mdash; report will appear here...</p>
-                    </div>
-                  ) : (
-                    <p style={{ color: "#555", fontSize: "13px" }}>Report will appear here after analysis</p>
-                  )}
-                </div>
-              )}
+        <div style={{ maxWidth: "860px", margin: "0 auto" }}>
+          {/* Input bar */}
+          <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
+            <label style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>
+              GitHub Repository URL
+            </label>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                type="text"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                placeholder="https://github.com/owner/repo"
+                disabled={running}
+                className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] placeholder-[#888888] focus:outline-none focus:border-[#534AB7] disabled:opacity-50"
+              />
+              <button
+                onClick={handleRun}
+                disabled={running || !repoUrl}
+                className="px-4 py-2 bg-[#534AB7] text-white text-sm font-medium rounded-lg hover:bg-[#6355c7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {running ? "Running..." : "Analyze"}
+              </button>
             </div>
           </div>
-        )}
+
+          {error && (
+            <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 text-[#E24B4A] text-sm rounded-lg p-3 mb-4">
+              {error}
+            </div>
+          )}
+
+          {/* 2x2 Agent grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            {AGENTS.map((agent) => (
+              <AgentCard
+                key={agent.id}
+                agentId={agent.id as "agent1" | "agent2" | "agent3" | "agent4"}
+                name={agent.name}
+                status={agents[agent.id].status}
+                logs={agents[agent.id].logs}
+                entityId={agents[agent.id].entityId}
+                txHash={agents[agent.id].txHash}
+                payload={agents[agent.id].payload}
+              />
+            ))}
+          </div>
+
+          {/* SEE FINAL RESULT button */}
+          {agent4Done && (
+            <button
+              onClick={() => setShowModal(true)}
+              style={{
+                width: "100%",
+                height: "48px",
+                marginTop: "16px",
+                background: "#1D9E75",
+                color: "#0a0a0a",
+                fontFamily: "'Courier New', monospace",
+                fontSize: "13px",
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "background 0.2s",
+                animation: "buttonReveal 0.3s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#178563")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#1D9E75")}
+            >
+              SEE FINAL RESULT &rarr;
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Memory tab */}
@@ -418,6 +497,9 @@ export default function Home() {
 
       {/* Query tab */}
       {activeTab === "query" && <QueryTab />}
+
+      {/* Modal */}
+      {showModal && <ReportModal agents={agents} onClose={() => setShowModal(false)} />}
     </main>
   );
 }
