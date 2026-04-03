@@ -1,23 +1,52 @@
 // frontend/app/api/sessions/route.ts
-// GET endpoint that queries Arkiv for all final-report entities.
-// Returns array of past session reports with their entity IDs and payloads.
-// Powers the "Past sessions" section and cross-project comparison.
+// GET endpoint that queries Arkiv for entities.
+// Optional query param ?type=final-report filters by type.
+// Without ?type, returns all entities owned by the wallet.
 
-import { publicClient } from "../../../../src/arkiv/client";
-import { readMemory } from "../../../../src/arkiv/memory";
+import { publicClient, walletClient } from "../../../../src/arkiv/client";
+import { eq } from "@arkiv-network/sdk/query";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const entities = await readMemory(publicClient, { type: "final-report" });
+    const url = new URL(req.url);
+    const typeFilter = url.searchParams.get("type");
 
-    const sessions = entities.map((entity) => ({
-      entityId: entity.key,
-      payload: entity.toJson(),
-      expiresAtBlock: entity.expiresAtBlock?.toString() ?? null,
-      attributes: entity.attributes,
-    }));
+    let q = publicClient
+      .buildQuery()
+      .withAttributes(true)
+      .withPayload(true)
+      .withMetadata(true);
+
+    if (typeFilter) {
+      q = q.where(eq("type", typeFilter));
+    } else {
+      // No type filter: get all entities owned by our wallet
+      q = q.ownedBy(walletClient.account.address);
+    }
+
+    const result = await q.limit(100).fetch();
+
+    const sessions = result.entities.map((entity) => {
+      let payload: unknown = null;
+      try {
+        payload = entity.toJson();
+      } catch {
+        try {
+          payload = { text: entity.toText() };
+        } catch {
+          payload = null;
+        }
+      }
+
+      return {
+        entityId: entity.key,
+        payload: payload ?? {},
+        expiresAtBlock: entity.expiresAtBlock?.toString() ?? null,
+        attributes: entity.attributes,
+      };
+    });
 
     return Response.json({ sessions });
   } catch (err) {

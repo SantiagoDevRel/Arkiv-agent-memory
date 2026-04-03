@@ -6,6 +6,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import MemoryTab from "./components/MemoryTab";
+import QueryTab from "./components/QueryTab";
 
 // --- Types ---
 
@@ -490,7 +492,16 @@ function ScoreComparison({
 
 // --- Main Page ---
 
+const TABS = [
+  { id: "run", label: "Run" },
+  { id: "memory", label: "Memory" },
+  { id: "query", label: "Query" },
+] as const;
+
+type TabId = typeof TABS[number]["id"];
+
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<TabId>("run");
   const [repoUrl, setRepoUrl] = useState("https://github.com/fabianferno/clink");
   const [running, setRunning] = useState(false);
   const [agents, setAgents] = useState<Record<string, AgentState>>({
@@ -506,7 +517,7 @@ export default function Home() {
 
   // Fetch past sessions on mount
   useEffect(() => {
-    fetch("/api/sessions")
+    fetch("/api/sessions?type=final-report")
       .then((r) => r.json())
       .then((data) => {
         if (data.sessions) setPastSessions(data.sessions);
@@ -601,7 +612,7 @@ export default function Home() {
               txHash: event.txHash,
             });
             // Refresh past sessions
-            fetch("/api/sessions")
+            fetch("/api/sessions?type=final-report")
               .then((r) => r.json())
               .then((data) => {
                 if (data.sessions) setPastSessions(data.sessions);
@@ -623,87 +634,111 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-6 max-w-7xl mx-auto">
-      <header className="mb-8">
+      <header className="mb-4">
         <h1 className="text-2xl font-bold text-[#f0f0f0]">Arkiv Agent Memory</h1>
         <p className="text-sm text-[#888888] mt-1">
           Multi-agent pipeline analyzing GitHub repos with on-chain memory on Kaolin testnet
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div>
-          {/* Input */}
-          <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-4 mb-4">
-            <label className="text-xs font-medium text-[#888888] uppercase tracking-wider block mb-2">
-              GitHub Repository URL
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={repoUrl}
-                onChange={(e) => setRepoUrl(e.target.value)}
-                placeholder="https://github.com/owner/repo"
-                disabled={running}
-                className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] placeholder-[#888888] focus:outline-none focus:border-[#534AB7] disabled:opacity-50"
-              />
-              <button
-                onClick={handleRun}
-                disabled={running || !repoUrl}
-                className="px-4 py-2 bg-[#534AB7] text-white text-sm font-medium rounded-lg hover:bg-[#6355c7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {running ? "Running..." : "Analyze"}
-              </button>
+      {/* Tab bar */}
+      <div className="flex border-b border-[#2a2a2a] mb-6">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-5 py-2.5 text-[13px] font-medium transition-colors ${
+              activeTab === tab.id
+                ? "text-[#f0f0f0] border-b-2 border-[#1D9E75]"
+                : "text-[#888888] hover:text-[#f0f0f0]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Run tab — always mounted, visibility toggled to preserve state */}
+      <div style={{ display: activeTab === "run" ? "block" : "none" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div>
+            <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-4 mb-4">
+              <label className="text-xs font-medium text-[#888888] uppercase tracking-wider block mb-2">
+                GitHub Repository URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={repoUrl}
+                  onChange={(e) => setRepoUrl(e.target.value)}
+                  placeholder="https://github.com/owner/repo"
+                  disabled={running}
+                  className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] placeholder-[#888888] focus:outline-none focus:border-[#534AB7] disabled:opacity-50"
+                />
+                <button
+                  onClick={handleRun}
+                  disabled={running || !repoUrl}
+                  className="px-4 py-2 bg-[#534AB7] text-white text-sm font-medium rounded-lg hover:bg-[#6355c7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {running ? "Running..." : "Analyze"}
+                </button>
+              </div>
             </div>
+
+            {error && (
+              <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 text-[#E24B4A] text-sm rounded-lg p-3 mb-4">
+                {error}
+              </div>
+            )}
+
+            {AGENTS.map((agent) => (
+              <AgentPanel
+                key={agent.id}
+                agent={agent}
+                state={agents[agent.id]}
+                onEntityDeleted={(agentId) => {
+                  setAgents((prev) => ({
+                    ...prev,
+                    [agentId]: { ...prev[agentId], entityId: undefined, txHash: undefined, payload: undefined },
+                  }));
+                }}
+              />
+            ))}
           </div>
 
-          {error && (
-            <div className="bg-[#E24B4A]/10 border border-[#E24B4A]/30 text-[#E24B4A] text-sm rounded-lg p-3 mb-4">
-              {error}
-            </div>
-          )}
+          {/* Right Column */}
+          <div>
+            {finalReport ? (
+              <>
+                <FinalReport report={finalReport.report} entityId={finalReport.entityId} txHash={finalReport.txHash} />
+                <ScoreComparison current={finalReport.report} past={pastSessions} />
+              </>
+            ) : (
+              <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-8 text-center">
+                <p className="text-[#888888] text-sm">
+                  {running
+                    ? "Pipeline running \u2014 report will appear here..."
+                    : "Enter a GitHub repo URL and click Analyze to start"}
+                </p>
+              </div>
+            )}
 
-          {/* Agent Panels */}
-          {AGENTS.map((agent) => (
-            <AgentPanel
-              key={agent.id}
-              agent={agent}
-              state={agents[agent.id]}
-              onEntityDeleted={(agentId) => {
-                setAgents((prev) => ({
-                  ...prev,
-                  [agentId]: { ...prev[agentId], entityId: undefined, txHash: undefined, payload: undefined },
-                }));
+            <PastSessions
+              sessions={pastSessions}
+              onDelete={(entityId) => {
+                setPastSessions((prev) => prev.filter((s) => s.entityId !== entityId));
               }}
             />
-          ))}
-        </div>
-
-        {/* Right Column */}
-        <div>
-          {finalReport ? (
-            <>
-              <FinalReport report={finalReport.report} entityId={finalReport.entityId} txHash={finalReport.txHash} />
-              <ScoreComparison current={finalReport.report} past={pastSessions} />
-            </>
-          ) : (
-            <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-8 text-center">
-              <p className="text-[#888888] text-sm">
-                {running
-                  ? "Pipeline running \u2014 report will appear here..."
-                  : "Enter a GitHub repo URL and click Analyze to start"}
-              </p>
-            </div>
-          )}
-
-          <PastSessions
-            sessions={pastSessions}
-            onDelete={(entityId) => {
-              setPastSessions((prev) => prev.filter((s) => s.entityId !== entityId));
-            }}
-          />
+          </div>
         </div>
       </div>
+
+      {/* Memory tab — remounts on each switch */}
+      {activeTab === "memory" && <MemoryTab />}
+
+      {/* Query tab — remounts on each switch */}
+      {activeTab === "query" && <QueryTab />}
     </main>
   );
 }
