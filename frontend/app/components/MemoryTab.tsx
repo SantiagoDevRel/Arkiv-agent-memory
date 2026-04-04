@@ -16,7 +16,7 @@ const BLOCK_TIME = 2;
 
 const TYPE_COLORS: Record<string, string> = {
   "final-report": "var(--accent-purple)",
-  "readme-summary": "var(--accent)",
+  "readme-summary": "var(--accent-green)",
   "code-analysis": "var(--accent-blue)",
   "arkiv-evaluation": "var(--accent-amber)",
   "connection-test": "var(--text-muted)",
@@ -49,7 +49,7 @@ function TtlRow({ expiresAtBlock, type }: { expiresAtBlock: string | null; type:
 
   const isPersistent = type === "final-report";
   const pct = isPersistent ? 100 : Math.min(100, (secondsLeft / 300) * 100);
-  const color = isPersistent ? "var(--accent-purple)" : pct > 60 ? "var(--accent)" : pct > 20 ? "var(--accent-amber)" : "var(--accent-red)";
+  const color = isPersistent ? "var(--accent-purple)" : pct > 60 ? "var(--accent-green)" : pct > 20 ? "var(--accent-amber)" : "var(--accent-red)";
 
   const expiresAt = new Date(Date.now() + secondsLeft * 1000);
   const expiryLabel = secondsLeft > 86400
@@ -108,19 +108,19 @@ export default function MemoryTab() {
     <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px 0" }}>
       {/* Filter bar */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
-        <button onClick={() => setFilter("all")} style={{ padding: "8px 16px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", borderRadius: "6px", fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", transition: "all 0.2s", background: filter === "all" ? "var(--accent)" : "var(--bg-card)", color: filter === "all" ? "#000" : "var(--text-muted)", border: `1px solid ${filter === "all" ? "var(--accent)" : "var(--border)"}` }}>
+        <button onClick={() => setFilter("all")} style={{ padding: "8px 16px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", transition: "all 0.2s", background: filter === "all" ? "var(--accent-green)" : "var(--bg-card)", color: filter === "all" ? "#000" : "var(--text-muted)", border: `1px solid ${filter === "all" ? "var(--accent-green)" : "var(--border)"}` }}>
           All ({entities.length})
         </button>
         {types.map((t) => {
           const count = entities.filter((e) => e.attributes.find((a) => a.key === "type")?.value === t).length;
           const active = filter === t;
           return (
-            <button key={t} onClick={() => setFilter(t)} style={{ padding: "8px 16px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", borderRadius: "6px", fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", transition: "all 0.2s", background: active ? "var(--accent)" : "var(--bg-card)", color: active ? "#000" : "var(--text-muted)", border: `1px solid ${active ? "var(--accent)" : "var(--border)"}` }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ padding: "8px 16px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", transition: "all 0.2s", background: active ? "var(--accent-green)" : "var(--bg-card)", color: active ? "#000" : "var(--text-muted)", border: `1px solid ${active ? "var(--accent-green)" : "var(--border)"}` }}>
               {t} ({count})
             </button>
           );
         })}
-        <button onClick={fetchEntities} disabled={loading} style={{ marginLeft: "auto", padding: "8px 16px", fontSize: "11px", fontWeight: 600, borderRadius: "6px", fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", background: "var(--bg-card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
+        <button onClick={fetchEntities} disabled={loading} style={{ marginLeft: "auto", padding: "8px 16px", fontSize: "11px", fontWeight: 600, borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", background: "var(--bg-card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
           {loading ? "..." : "\u21bb Refresh"}
         </button>
       </div>
@@ -146,14 +146,14 @@ export default function MemoryTab() {
               {/* Top row */}
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", padding: "3px 10px", borderRadius: "20px", letterSpacing: "0.08em", background: `${typeColor}18`, color: typeColor }}>{entityType}</span>
-                <span style={{ fontSize: "11px", fontFamily: "'IBM Plex Mono', monospace", color: "var(--text-muted)", flex: 1 }}>{truncId(entity.entityId)}</span>
-                <a href={`https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entity.entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
+                <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-muted)", flex: 1 }}>{truncId(entity.entityId)}</span>
+                <a href={`https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entity.entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-green)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
                 <button onClick={() => handleDelete(entity.entityId)} disabled={deletingKeys.has(entity.entityId)} style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", background: "none", color: "var(--text-muted)", fontSize: "14px", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent-red)"; e.currentTarget.style.background = "rgba(226,75,74,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "none"; }}>{deletingKeys.has(entity.entityId) ? "..." : "\u00d7"}</button>
               </div>
 
               {projectName && <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", margin: "10px 0 4px" }}>{projectName}</div>}
               {summary && <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "10px" }}>{summary}{summary.length >= 120 ? "..." : ""}</div>}
-              {repo && <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "'IBM Plex Mono', monospace", marginBottom: "12px" }}>{repo}</div>}
+              {repo && <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginBottom: "12px" }}>{repo}</div>}
 
               <TtlRow expiresAtBlock={entity.expiresAtBlock} type={entityType} />
             </div>

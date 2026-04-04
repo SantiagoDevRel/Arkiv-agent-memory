@@ -113,10 +113,10 @@ function useReveal() {
 
 function Chip({ label }: { label: string }) {
   return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "2px 6px", fontSize: "9px", color: "#555", cursor: "help" }} className="group">
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "4px", padding: "2px 6px", fontSize: "9px", color: "#555", cursor: "help" }} className="group">
       {label}
-      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "14px", height: "14px", borderRadius: "50%", background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#666", fontSize: "9px", fontWeight: 700, marginLeft: "4px" }}>i</span>
-      <span className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: "6px", padding: "8px 10px", fontSize: "10px", color: "#888", lineHeight: 1.6, width: "180px", zIndex: 50, fontFamily: "monospace" }}>
+      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "14px", height: "14px", borderRadius: "50%", background: "#1a1a1a", border: "1px solid var(--border)", color: "#666", fontSize: "9px", fontWeight: 700, marginLeft: "4px" }}>i</span>
+      <span className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", background: "#1a1a1a", border: "1px solid var(--border)", borderRadius: "6px", padding: "8px 10px", fontSize: "10px", color: "#888", lineHeight: 1.6, width: "180px", zIndex: 50, fontFamily: "var(--font-mono)" }}>
         {TOOLTIPS[label]}
       </span>
     </span>
@@ -177,7 +177,7 @@ export default function HowItWorksTab() {
         </p>
 
         {/* Pipeline strip */}
-        <div style={{ background: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "12px", padding: "16px", display: "flex", alignItems: "center", gap: "8px", overflowX: "auto" }}>
+        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", display: "flex", alignItems: "center", gap: "8px", overflowX: "auto" }}>
           {nodes.map((node, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               {i > 0 && <span style={{ color: "#2a2a2a", fontSize: "14px", padding: "0 4px", flexShrink: 0 }}>&rarr;</span>}
@@ -199,7 +199,7 @@ export default function HowItWorksTab() {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: "8px", fontSize: "10px", color: "#444", fontFamily: "monospace" }}>
+        <div style={{ marginTop: "8px", fontSize: "10px", color: "#444", fontFamily: "var(--font-mono)" }}>
           Sequential execution &middot; Kaolin testnet &middot; Chain ID 60138453025 &middot; Wallet 0xa618A2736431f24C26F1C8Dac9CA00ECc845a1C6
         </div>
       </div>
@@ -212,17 +212,17 @@ export default function HowItWorksTab() {
           An entity is a row in a database table &mdash; except no company controls the database. It lives on the Arkiv blockchain, it is queryable by attributes, and it automatically deletes itself after a set time. This is what the agents use as shared memory.
         </p>
 
-        <div style={{ background: "#0d0d0d", border: "2px solid #0a3a20", borderRadius: "12px", padding: "16px" }}>
+        <div style={{ background: "var(--bg-deep)", border: "2px solid #0a3a20", borderRadius: "12px", padding: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1D9E75", animation: "chainDotAnim 2s ease-in-out infinite" }} />
             <span style={{ fontSize: "9px", color: "#1D9E75", fontWeight: 700, letterSpacing: "0.15em" }}>ARKIV KAOLIN &middot; LIVE ENTITIES</span>
           </div>
 
           {ENTITY_CARDS.map((card, idx) => (
-            <div key={idx} style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
+            <div key={idx} style={{ background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "2px 8px", borderRadius: "10px", background: card.pillBg, color: card.pillColor, border: `1px solid ${card.pillBorder}` }}>{card.type}</span>
-                <span style={{ fontSize: "10px", color: "#555", flex: 1, fontFamily: "monospace" }}>{card.key}</span>
+                <span style={{ fontSize: "10px", color: "#555", flex: 1, fontFamily: "var(--font-mono)" }}>{card.key}</span>
                 <span style={{ fontSize: "9px", fontWeight: 700, color: card.ttlColor }}>{card.ttlText}</span>
               </div>
               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
@@ -249,7 +249,7 @@ export default function HowItWorksTab() {
           Agent 3 has no access to Agent 1 or Agent 2&apos;s variables. It receives only a session label. It builds a query and executes it against the Kaolin chain. Here is exactly what happens.
         </p>
 
-        <div style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "12px", fontFamily: "monospace", fontSize: "10px", lineHeight: 1.8, overflow: "hidden" }}>
+        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px", fontFamily: "var(--font-mono)", fontSize: "10px", lineHeight: 1.8, overflow: "hidden" }}>
           {[
             [{ text: "const ", c: "#378ADD" }, { text: "result ", c: "#555" }, { text: "= await ", c: "#378ADD" }, { text: "publicClient", c: "#555" }],
             [{ text: "  .buildQuery", c: "#1D9E75" }, { text: "()", c: "#555" }],
@@ -266,10 +266,10 @@ export default function HowItWorksTab() {
         </div>
 
         <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
-          <button onClick={() => runBuildAnim(false)} style={{ background: "#0a1a2a", border: "1px solid #1a3a5a", color: "#378ADD", padding: "7px 16px", borderRadius: "6px", fontFamily: "monospace", fontSize: "10px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em" }}>
+          <button onClick={() => runBuildAnim(false)} style={{ background: "#0a1a2a", border: "1px solid #1a3a5a", color: "#378ADD", padding: "7px 16px", borderRadius: "6px", fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em" }}>
             Build query &rarr;
           </button>
-          <button onClick={() => runBuildAnim(true)} style={{ background: "#001a10", border: "1px solid #0a3a20", color: "#1D9E75", padding: "7px 16px", borderRadius: "6px", fontFamily: "monospace", fontSize: "10px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em" }}>
+          <button onClick={() => runBuildAnim(true)} style={{ background: "#001a10", border: "1px solid #0a3a20", color: "#1D9E75", padding: "7px 16px", borderRadius: "6px", fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em" }}>
             Show Arkiv response &rarr;
           </button>
         </div>
@@ -285,7 +285,7 @@ export default function HowItWorksTab() {
 ]`}
         </div>
 
-        <div style={{ fontSize: "10px", color: "#444", marginTop: "8px", fontFamily: "monospace", lineHeight: 1.6 }}>
+        <div style={{ fontSize: "10px", color: "#444", marginTop: "8px", fontFamily: "var(--font-mono)", lineHeight: 1.6 }}>
           eq() means exactly equal to. gte() means greater than or equal to &mdash; useful for filtering by score, date, or any number. These are filter functions from the Arkiv SDK passed into .where() in the query builder.
         </div>
       </div>
@@ -293,17 +293,17 @@ export default function HowItWorksTab() {
       {/* ── MODAL ── */}
       {modal && (
         <div onClick={() => setModalId(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: "14px", width: "min(520px, 92vw)", maxHeight: "80vh", overflowY: "auto", padding: "24px", position: "relative", animation: "modalReveal 0.25s ease" }}>
-            <button onClick={() => setModalId(null)} style={{ position: "absolute", top: "14px", right: "16px", background: "none", border: "none", color: "#444", fontSize: "18px", cursor: "pointer", fontFamily: "monospace" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f0f0")} onMouseLeave={(e) => (e.currentTarget.style.color = "#444")}>&times;</button>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "14px", width: "min(520px, 92vw)", maxHeight: "80vh", overflowY: "auto", padding: "24px", position: "relative", animation: "modalReveal 0.25s ease" }}>
+            <button onClick={() => setModalId(null)} style={{ position: "absolute", top: "14px", right: "16px", background: "none", border: "none", color: "#444", fontSize: "18px", cursor: "pointer", fontFamily: "var(--font-mono)" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f0f0")} onMouseLeave={(e) => (e.currentTarget.style.color = "#444")}>&times;</button>
             <span style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: modal.tagColor }}>{modal.tag}</span>
             <h3 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginTop: "6px", marginBottom: "14px" }}>{modal.title}</h3>
             {modal.steps.map((step) => (
-              <div key={step.num} style={{ background: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", display: "flex", gap: "10px" }}>
+              <div key={step.num} style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", display: "flex", gap: "10px" }}>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: step.color, flexShrink: 0, marginTop: "1px" }}>{step.num}</span>
                 <span style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, whiteSpace: "pre-line" }}>{step.text}</span>
               </div>
             ))}
-            <pre style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "6px", padding: "10px", fontSize: "12px", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.8, color: "#888", margin: "10px 0", whiteSpace: "pre" }}>{modal.codeBlock}</pre>
+            <pre style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "6px", padding: "10px", fontSize: "12px", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.8, color: "#888", margin: "10px 0", whiteSpace: "pre" }}>{modal.codeBlock}</pre>
           </div>
         </div>
       )}

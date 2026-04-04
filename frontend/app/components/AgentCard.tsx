@@ -19,18 +19,18 @@ type AgentCardProps = {
 
 const AGENT_NUMBER: Record<string, number> = { agent1: 1, agent2: 2, agent3: 3, agent4: 4 };
 
-const ENTITY_TYPE_MAP: Record<string, { label: string; bg: string; color: string }> = {
-  agent1: { label: "readme-summary", bg: "#001a10", color: "#1D9E75" },
-  agent2: { label: "code-analysis", bg: "#0a1a2a", color: "#378ADD" },
-  agent3: { label: "arkiv-signal", bg: "#1a1000", color: "#EF9F27" },
-  agent4: { label: "final-report", bg: "#0e0a1a", color: "#8b7cf8" },
+const ENTITY_TYPE_MAP: Record<string, { label: string; bg: string; color: string; border: string }> = {
+  agent1: { label: "readme-summary", bg: "#001a10", color: "#1D9E75", border: "#0a3a20" },
+  agent2: { label: "code-analysis", bg: "#0a1525", color: "#378ADD", border: "#1a3a5a" },
+  agent3: { label: "arkiv-signal", bg: "#1a1000", color: "#EF9F27", border: "#3a2800" },
+  agent4: { label: "final-report", bg: "#0e0a1a", color: "#8b7cf8", border: "#2a1a4a" },
 };
 
-const STATUS_BADGE: Record<string, { bg: string; color: string; text: string }> = {
-  idle: { bg: "#1a1a1a", color: "#444", text: "IDLE" },
-  waiting: { bg: "#0a1a2a", color: "#378ADD", text: "WAITING" },
-  running: { bg: "#1a1000", color: "#EF9F27", text: "RUNNING" },
-  done: { bg: "#001a10", color: "#1D9E75", text: "DONE" },
+const STATUS_BADGE: Record<string, { bg: string; color: string; text: string; border: string }> = {
+  idle: { bg: "#111", color: "#444", text: "IDLE", border: "#1e1e1e" },
+  waiting: { bg: "#0a1525", color: "#378ADD", text: "WAITING", border: "#1a3a5a" },
+  running: { bg: "#1a1000", color: "#EF9F27", text: "RUNNING", border: "#3a2800" },
+  done: { bg: "#001a10", color: "#1D9E75", text: "DONE", border: "#0a3a20" },
 };
 
 const BORDER_STYLE: Record<string, React.CSSProperties> = {
@@ -60,10 +60,12 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
   const entityType = ENTITY_TYPE_MAP[agentId];
   const borderStyle = BORDER_STYLE[status];
 
+  const glowClass = status === "running" ? "glow-amber" : status === "done" ? "glow-green" : "";
+
   return (
-    <div style={{ background: "#111", borderRadius: "12px", overflow: "hidden", marginBottom: "12px", ...borderStyle }}>
+    <div className={glowClass} style={{ background: "var(--bg-panel)", borderRadius: "12px", overflow: "hidden", transition: "border-color 0.2s, box-shadow 0.2s", ...borderStyle }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px 20px", borderBottom: "1px solid #1a1a1a" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "14px 18px", borderBottom: "1px solid var(--border-subtle)" }}>
         {/* Robot */}
         <div className={robotClass}>
           <div className="robot-antenna" />
@@ -78,7 +80,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
 
         {/* Agent info */}
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "13px", fontWeight: 600, color: "#f0f0f0", letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: "'IBM Plex Mono', monospace" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>
             Agent {num} &middot; {name}
           </div>
           <div style={{ fontSize: "11px", marginTop: "2px" }}>
@@ -98,13 +100,14 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
         <span style={{
           background: badge.bg,
           color: badge.color,
-          fontSize: "10px",
+          border: `1px solid ${badge.border}`,
+          fontSize: "9px",
           fontWeight: 700,
           padding: "3px 10px",
           borderRadius: "20px",
-          letterSpacing: "0.08em",
+          letterSpacing: "0.1em",
           textTransform: "uppercase",
-          fontFamily: "monospace",
+          fontFamily: "var(--font-mono)",
           flexShrink: 0,
         }}>
           {badge.text}
@@ -133,9 +136,9 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
         {/* Entity strip */}
         {entityId && (
           <div style={{
-            padding: "14px",
-            background: "#0a0a0a",
-            border: "1px solid #1a1a1a",
+            padding: "10px 14px",
+            background: "var(--bg-deep)",
+            border: "1px solid var(--border-subtle)",
             borderRadius: "6px",
             marginTop: "10px",
             display: "flex",
@@ -151,6 +154,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
               letterSpacing: "0.08em",
               background: entityType.bg,
               color: entityType.color,
+              border: `1px solid ${entityType.border}`,
               flexShrink: 0,
             }}>
               {entityType.label}

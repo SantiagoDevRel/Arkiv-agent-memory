@@ -390,42 +390,37 @@ export default function Home() {
   }, [repoUrl, running]);
 
   return (
-    <main className="min-h-screen p-6 max-w-7xl mx-auto">
-      <header style={{ marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-primary)", fontFamily: "'IBM Plex Mono', monospace" }}>
-            Arkiv Agent Memory
-          </h1>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent)" }} className="animate-pulse-dot" />
-            <span style={{ fontSize: "9px", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 600 }}>
-              LIVE &middot; Kaolin testnet
-            </span>
-          </div>
+    <main className="min-h-screen max-w-7xl mx-auto">
+      <header style={{ borderBottom: "1px solid var(--border)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span className="chain-dot" />
+          <h1 style={{ fontFamily: "var(--font-mono)", fontSize: "15px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-primary)", margin: 0 }}>Arkiv Agent Memory</h1>
         </div>
-        <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
-          Multi-agent pipeline analyzing GitHub repos with on-chain memory
-        </p>
+        <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-muted)" }}>
+          Kaolin Testnet &middot; Chain 60138453025
+        </div>
       </header>
 
       {/* Tab bar */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--border)", marginBottom: "24px" }}>
+      <div style={{ display: "flex", gap: 0, padding: "0 24px", borderBottom: "1px solid var(--border)", background: "var(--bg-page)" }}>
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              padding: "14px 24px",
-              fontSize: "13px",
+              padding: "14px 20px",
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
               fontWeight: 600,
-              letterSpacing: "0.05em",
-              background: "none",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
               border: "none",
-              borderBottom: activeTab === tab.id ? "2px solid var(--accent)" : "2px solid transparent",
-              color: activeTab === tab.id ? "var(--accent)" : "var(--text-muted)",
+              background: "none",
               cursor: "pointer",
-              transition: "color 0.2s",
-              fontFamily: "'IBM Plex Mono', monospace",
+              color: activeTab === tab.id ? "var(--accent-green)" : "var(--text-muted)",
+              borderBottom: activeTab === tab.id ? "2px solid var(--accent-green)" : "2px solid transparent",
+              transition: "all 0.2s",
+              marginBottom: "-1px",
             }}
             onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.color = "var(--text-secondary)"; }}
             onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.color = "var(--text-muted)"; }}
@@ -436,11 +431,11 @@ export default function Home() {
       </div>
 
       {/* Run tab — always mounted, visibility toggled */}
-      <div style={{ display: activeTab === "run" ? "block" : "none" }}>
-        <div style={{ maxWidth: "860px", margin: "0 auto" }}>
+      <div style={{ display: activeTab === "run" ? "block" : "none", padding: "24px" }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           {/* Input bar */}
-          <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
-            <label style={{ fontSize: "11px", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>
+          <div style={{ background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px 24px", marginBottom: "20px" }}>
+            <label style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.15em", display: "block", marginBottom: "8px", fontWeight: 600 }}>
               GitHub Repository URL
             </label>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -450,12 +445,16 @@ export default function Home() {
                 onChange={(e) => setRepoUrl(e.target.value)}
                 placeholder="https://github.com/owner/repo"
                 disabled={running}
-                className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] placeholder-[#888888] focus:outline-none focus:border-[#534AB7] disabled:opacity-50"
+                style={{ flex: 1, background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 14px", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-primary)", outline: "none", transition: "border-color 0.2s", opacity: running ? 0.5 : 1 }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent-green)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
               />
               <button
                 onClick={handleRun}
                 disabled={running || !repoUrl}
-                className="px-4 py-2 bg-[#534AB7] text-white text-sm font-medium rounded-lg hover:bg-[#6355c7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ background: running ? "#666" : "var(--accent-green)", color: "#000", border: "none", borderRadius: "8px", padding: "10px 20px", fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: running ? "not-allowed" : "pointer", transition: "background 0.2s, transform 0.1s" }}
+                onMouseEnter={(e) => { if (!running) e.currentTarget.style.background = "#17a878"; }}
+                onMouseLeave={(e) => { if (!running) e.currentTarget.style.background = "var(--accent-green)"; }}
               >
                 {running ? "Running..." : "Analyze"}
               </button>
@@ -492,21 +491,21 @@ export default function Home() {
                 width: "100%",
                 height: "48px",
                 marginTop: "16px",
-                background: "#1D9E75",
-                color: "#0a0a0a",
-                fontFamily: "'Courier New', monospace",
-                fontSize: "13px",
+                background: "linear-gradient(135deg, #0a3a20, #1D9E75)",
+                color: "#000",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
                 fontWeight: 700,
-                letterSpacing: "0.1em",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 border: "none",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 cursor: "pointer",
-                transition: "background 0.2s",
+                transition: "opacity 0.2s, transform 0.1s",
                 animation: "buttonReveal 0.3s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#178563")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#1D9E75")}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
               SEE FINAL RESULT &rarr;
             </button>
@@ -515,13 +514,13 @@ export default function Home() {
       </div>
 
       {/* How It Works tab */}
-      {activeTab === "how" && <HowItWorksTab />}
+      {activeTab === "how" && <div style={{ padding: "24px" }}><HowItWorksTab /></div>}
 
       {/* Memory tab */}
-      {activeTab === "memory" && <MemoryTab />}
+      {activeTab === "memory" && <div style={{ padding: "0 24px" }}><MemoryTab /></div>}
 
       {/* Query tab */}
-      {activeTab === "query" && <QueryTab />}
+      {activeTab === "query" && <div style={{ padding: "0 24px" }}><QueryTab /></div>}
 
       {/* Modal */}
       {showModal && <ReportModal agents={agents} onClose={() => setShowModal(false)} />}
