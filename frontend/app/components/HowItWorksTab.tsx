@@ -4,6 +4,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import CopyButton from "./CopyButton";
 
 // ─── Modal Data ───
 
@@ -170,14 +171,15 @@ export default function HowItWorksTab() {
     <div style={{ maxWidth: "860px", margin: "0 auto" }}>
       {/* ── SECTION 1: Pipeline overview ── */}
       <div style={{ marginBottom: "40px" }}>
-        <div style={{ fontSize: "11px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>Overview</div>
+        <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>01 &middot; Overview</div>
         <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>Four agents. One memory layer.</h2>
         <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, maxWidth: "560px", marginBottom: "16px" }}>
           You give a GitHub repo URL. Four agents run in sequence. No agent receives another agent&apos;s output as a function call. The only way they communicate is through Arkiv &mdash; a blockchain memory layer. Remove Arkiv and the system breaks.
         </p>
 
         {/* Pipeline strip */}
-        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", display: "flex", alignItems: "center", gap: "8px", overflowX: "auto" }}>
+        <div style={{ position: "relative" }}>
+        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px", display: "flex", alignItems: "center", gap: "10px", overflowX: "auto" }}>
           {nodes.map((node, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               {i > 0 && <span style={{ color: "#2a2a2a", fontSize: "14px", padding: "0 4px", flexShrink: 0 }}>&rarr;</span>}
@@ -185,10 +187,11 @@ export default function HowItWorksTab() {
                 onClick={() => node.id.startsWith("agent") ? setModalId(node.id) : undefined}
                 style={{
                   background: node.bg, border: `${node.isArkiv ? "2px" : "1px"} solid ${node.border}`, color: node.color,
-                  borderRadius: "8px", padding: "10px 14px", fontSize: node.isArkiv ? "9px" : "10px", fontWeight: 700,
-                  letterSpacing: "0.05em", textTransform: "uppercase", textAlign: "center",
-                  minWidth: node.isArkiv ? "70px" : "90px", flexShrink: 0, whiteSpace: "pre-line",
+                  borderRadius: "8px", padding: "10px 12px", fontSize: node.isArkiv ? "9px" : "10px", fontWeight: 700,
+                  letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center",
+                  minWidth: node.isArkiv ? "70px" : "78px", flexShrink: 0, whiteSpace: "pre-line",
                   cursor: node.id.startsWith("agent") ? "pointer" : "default",
+                  fontFamily: "var(--font-mono)",
                 }}
               >
                 {node.label}
@@ -199,14 +202,18 @@ export default function HowItWorksTab() {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: "8px", fontSize: "10px", color: "#444", fontFamily: "var(--font-mono)" }}>
+        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "60px", pointerEvents: "none", background: "linear-gradient(to right, transparent, #080808)", borderRadius: "0 12px 12px 0" }} />
+        </div>
+        <div style={{ textAlign: "right", fontSize: "9px", color: "var(--text-muted)", marginTop: "6px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>scroll to see all agents &rarr;</div>
+        <div style={{ marginTop: "8px", fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
           Sequential execution &middot; Kaolin testnet &middot; Chain ID 60138453025 &middot; Wallet 0xa618A2736431f24C26F1C8Dac9CA00ECc845a1C6
         </div>
       </div>
 
       {/* ── SECTION 2: What is an entity ── */}
-      <div ref={sec2.ref} style={{ ...sec2.style, borderTop: "1px solid #1a1a1a", paddingTop: "40px", marginBottom: "40px" }}>
-        <div style={{ fontSize: "11px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>The memory layer</div>
+      <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)", margin: "0 0 80px 0" }} />
+      <div ref={sec2.ref} style={{ ...sec2.style, marginBottom: "40px" }}>
+        <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>02 &middot; The memory layer</div>
         <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>What is an entity?</h2>
         <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, marginBottom: "16px" }}>
           An entity is a row in a database table &mdash; except no company controls the database. It lives on the Arkiv blockchain, it is queryable by attributes, and it automatically deletes itself after a set time. This is what the agents use as shared memory.
@@ -241,15 +248,17 @@ export default function HowItWorksTab() {
         </div>
       </div>
 
+      <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)", margin: "0 0 80px 0" }} />
       {/* ── SECTION 3: Query animation ── */}
-      <div ref={sec3.ref} style={{ ...sec3.style, borderTop: "1px solid #1a1a1a", paddingTop: "40px", paddingBottom: "48px" }}>
-        <div style={{ fontSize: "11px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>Under the hood</div>
+      <div ref={sec3.ref} style={{ ...sec3.style, paddingBottom: "48px" }}>
+        <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>03 &middot; Under the hood</div>
         <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>How Agent 3 reads from Arkiv.</h2>
         <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, marginBottom: "16px" }}>
           Agent 3 has no access to Agent 1 or Agent 2&apos;s variables. It receives only a session label. It builds a query and executes it against the Kaolin chain. Here is exactly what happens.
         </p>
 
-        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px", fontFamily: "var(--font-mono)", fontSize: "10px", lineHeight: 1.8, overflow: "hidden" }}>
+        <div style={{ position: "relative", background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px", fontFamily: "var(--font-mono)", fontSize: "12px", lineHeight: 1.8, overflow: "hidden" }}>
+          <CopyButton text={`const result = await publicClient\n  .buildQuery()\n  .where(eq('sessionId', 'a3f9b2...'))\n  .where(eq('type', 'readme-summary'))\n  .withAttributes(true)\n  .withPayload(true)\n  .fetch();`} />
           {[
             [{ text: "const ", c: "#378ADD" }, { text: "result ", c: "#555" }, { text: "= await ", c: "#378ADD" }, { text: "publicClient", c: "#555" }],
             [{ text: "  .buildQuery", c: "#1D9E75" }, { text: "()", c: "#555" }],
@@ -303,7 +312,10 @@ export default function HowItWorksTab() {
                 <span style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, whiteSpace: "pre-line" }}>{step.text}</span>
               </div>
             ))}
-            <pre style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "6px", padding: "10px", fontSize: "12px", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.8, color: "#888", margin: "10px 0", whiteSpace: "pre" }}>{modal.codeBlock}</pre>
+            <div style={{ position: "relative", margin: "10px 0" }}>
+              <CopyButton text={modal.codeBlock} />
+              <pre style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "6px", padding: "10px", fontSize: "11px", fontFamily: "var(--font-mono)", lineHeight: 1.8, color: "var(--text-secondary)", whiteSpace: "pre" }}>{modal.codeBlock}</pre>
+            </div>
           </div>
         </div>
       )}

@@ -391,13 +391,18 @@ export default function Home() {
 
   return (
     <main className="min-h-screen max-w-7xl mx-auto">
-      <header style={{ borderBottom: "1px solid var(--border)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span className="chain-dot" />
-          <h1 style={{ fontFamily: "var(--font-mono)", fontSize: "15px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-primary)", margin: 0 }}>Arkiv Agent Memory</h1>
+      <header style={{ borderBottom: "1px solid var(--border)", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--bg-page)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "18px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.05em", lineHeight: 1, padding: "6px 10px", border: "2px solid var(--text-primary)", borderRadius: "6px", userSelect: "none" }}>A</div>
+          <div style={{ width: "1px", height: "20px", background: "var(--border)" }} />
+          <div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-primary)", lineHeight: 1.2 }}>Arkiv Agent Memory</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-muted)", letterSpacing: "0.1em", marginTop: "2px" }}>Multi-agent pipeline &middot; Kaolin testnet</div>
+          </div>
         </div>
-        <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-muted)" }}>
-          Kaolin Testnet &middot; Chain 60138453025
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "9px", fontFamily: "var(--font-mono)", color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          <span className="chain-dot" />
+          <span>Live &middot; Chain 60138453025</span>
         </div>
       </header>
 
@@ -459,6 +464,16 @@ export default function Home() {
                 {running ? "Running..." : "Analyze"}
               </button>
             </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.05em", padding: "10px 0", borderTop: "1px solid var(--border-subtle)", marginTop: "4px" }}>
+            <span>4 agents run in sequence</span>
+            <span style={{ color: "var(--border)" }}>&middot;</span>
+            <span>~60&ndash;90s total</span>
+            <span style={{ color: "var(--border)" }}>&middot;</span>
+            <span>each agent writes to Arkiv before the next starts</span>
+            <span style={{ color: "var(--border)" }}>&middot;</span>
+            <span style={{ color: "var(--accent-green)" }}>working memory: 5 min TTL &middot; final report: 30 days</span>
           </div>
 
           {error && (

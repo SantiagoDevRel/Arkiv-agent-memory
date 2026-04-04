@@ -52,21 +52,27 @@ function TtlRow({ expiresAtBlock, type }: { expiresAtBlock: string | null; type:
   const color = isPersistent ? "var(--accent-purple)" : pct > 60 ? "var(--accent-green)" : pct > 20 ? "var(--accent-amber)" : "var(--accent-red)";
 
   const expiresAt = new Date(Date.now() + secondsLeft * 1000);
-  const expiryLabel = secondsLeft > 86400
-    ? `Expires ${expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} at ${expiresAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}`
+
+  const timeString = secondsLeft > 86400
+    ? `${Math.floor(secondsLeft / 86400)}d ${Math.floor((secondsLeft % 86400) / 3600)}h`
     : secondsLeft > 3600
-    ? `${Math.floor(secondsLeft / 3600)}h ${Math.floor((secondsLeft % 3600) / 60)}m remaining`
+    ? `${Math.floor(secondsLeft / 3600)}h ${Math.floor((secondsLeft % 3600) / 60)}m`
     : secondsLeft > 60
-    ? `${Math.floor(secondsLeft / 60)}m remaining`
-    : `${secondsLeft}s remaining`;
+    ? `${Math.floor(secondsLeft / 60)}m ${secondsLeft % 60}s`
+    : `${secondsLeft}s`;
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px" }}>
-      <span style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>TTL</span>
-      <div style={{ flex: 1, height: "4px", background: "#1a1a1a", borderRadius: "2px", overflow: "hidden" }}>
-        <div style={{ height: "100%", borderRadius: "2px", width: `${pct}%`, background: color, transition: "width 0.5s" }} />
+    <div style={{ marginTop: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
+        <span style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "var(--font-mono)" }}>Time remaining</span>
+        <span style={{ fontSize: "10px", fontWeight: 600, fontFamily: "var(--font-mono)", color }}>{isPersistent ? "PERSISTED \u00b7 30 days" : `${Math.round(pct)}% \u00b7 ${timeString}`}</span>
       </div>
-      <span style={{ fontSize: "11px", fontWeight: 500, color, whiteSpace: "nowrap" }}>{expiryLabel}</span>
+      <div style={{ height: "4px", background: "#1a1a1a", borderRadius: "2px", overflow: "hidden" }}>
+        <div style={{ height: "100%", borderRadius: "2px", background: color, width: isPersistent ? "100%" : `${pct}%`, transition: "width 5s linear" }} />
+      </div>
+      <div style={{ fontSize: "9px", color: "var(--text-muted)", marginTop: "4px", fontFamily: "var(--font-mono)" }}>
+        Expires {expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })} at {expiresAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
+      </div>
     </div>
   );
 }
@@ -141,11 +147,14 @@ export default function MemoryTab() {
           const projectName = (p.projectName as string) || (p.name as string) || "";
           const summary = ((p.oneLineSummary || p.goal || p.summary || "") as string).slice(0, 120);
 
+          const isFinalReport = entityType === "final-report";
+
           return (
-            <div key={entity.entityId} style={{ background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px 24px", marginBottom: "12px", transition: "border-color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#333")} onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}>
+            <div key={entity.entityId} style={{ background: isFinalReport ? "#0e0a1a" : "var(--bg-panel)", border: isFinalReport ? "1px solid #2a1a4a" : "1px solid var(--border)", borderRadius: "12px", padding: "20px 24px", marginBottom: "12px", transition: "border-color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#333")} onMouseLeave={(e) => (e.currentTarget.style.borderColor = isFinalReport ? "#2a1a4a" : "var(--border)")}>
               {/* Top row */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", padding: "3px 10px", borderRadius: "20px", letterSpacing: "0.08em", background: `${typeColor}18`, color: typeColor }}>{entityType}</span>
+                {isFinalReport && <span style={{ fontSize: "8px", fontWeight: 700, padding: "2px 7px", background: "rgba(139,124,248,0.12)", color: "var(--accent-purple)", border: "1px solid rgba(139,124,248,0.25)", borderRadius: "20px", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>persisted</span>}
                 <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-muted)", flex: 1 }}>{truncId(entity.entityId)}</span>
                 <a href={`https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entity.entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-green)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
                 <button onClick={() => handleDelete(entity.entityId)} disabled={deletingKeys.has(entity.entityId)} style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", background: "none", color: "var(--text-muted)", fontSize: "14px", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent-red)"; e.currentTarget.style.background = "rgba(226,75,74,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "none"; }}>{deletingKeys.has(entity.entityId) ? "..." : "\u00d7"}</button>

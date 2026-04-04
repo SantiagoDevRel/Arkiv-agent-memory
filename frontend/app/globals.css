@@ -110,3 +110,11 @@ body {
 @keyframes chainDotAnim { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.6); } }
 @keyframes modalReveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes sectionReveal { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+@keyframes expiredPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
+
+@keyframes entityExpire {
+  0% { opacity: 1; transform: translateY(0); max-height: 300px; }
+  50% { opacity: 0.2; }
+  100% { opacity: 0; transform: translateY(-10px); max-height: 0; padding: 0; margin: 0; overflow: hidden; }
+}
