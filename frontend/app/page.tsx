@@ -5,6 +5,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import HowItWorksTab from "./components/HowItWorksTab";
 import MemoryTab from "./components/MemoryTab";
 import QueryTab from "./components/QueryTab";
 import AgentCard from "./components/AgentCard";
@@ -270,6 +271,7 @@ function ReportModal({
 // --- Main Page ---
 
 const TABS = [
+  { id: "how", label: "How It Works" },
   { id: "run", label: "Run" },
   { id: "memory", label: "Memory" },
   { id: "query", label: "Query" },
@@ -278,7 +280,7 @@ const TABS = [
 type TabId = typeof TABS[number]["id"];
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabId>("run");
+  const [activeTab, setActiveTab] = useState<TabId>("how");
   const [repoUrl, setRepoUrl] = useState("https://github.com/fabianferno/clink");
   const [running, setRunning] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -491,6 +493,9 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {/* How It Works tab */}
+      {activeTab === "how" && <HowItWorksTab />}
 
       {/* Memory tab */}
       {activeTab === "memory" && <MemoryTab />}
