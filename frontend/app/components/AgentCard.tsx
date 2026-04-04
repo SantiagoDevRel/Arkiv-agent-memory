@@ -63,7 +63,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
   return (
     <div style={{ background: "#111", borderRadius: "12px", overflow: "hidden", marginBottom: "12px", ...borderStyle }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: "1px solid #1a1a1a" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px 20px", borderBottom: "1px solid #1a1a1a" }}>
         {/* Robot */}
         <div className={robotClass}>
           <div className="robot-antenna" />
@@ -78,7 +78,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
 
         {/* Agent info */}
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "#f0f0f0", letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: "#f0f0f0", letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: "'IBM Plex Mono', monospace" }}>
             Agent {num} &middot; {name}
           </div>
           <div style={{ fontSize: "11px", marginTop: "2px" }}>
@@ -112,7 +112,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
       </div>
 
       {/* Body */}
-      <div style={{ padding: "12px 16px" }}>
+      <div style={{ padding: "16px 20px" }}>
         <div className="agent-log-container" ref={logRef}>
           {logs.length === 0 && (status === "idle" || status === "waiting") ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#333", fontSize: "11px" }}>
@@ -133,7 +133,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
         {/* Entity strip */}
         {entityId && (
           <div style={{
-            padding: "8px 10px",
+            padding: "14px",
             background: "#0a0a0a",
             border: "1px solid #1a1a1a",
             borderRadius: "6px",
@@ -143,9 +143,9 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
             gap: "8px",
           }}>
             <span style={{
-              fontSize: "9px",
+              fontSize: "10px",
               fontWeight: 700,
-              padding: "2px 8px",
+              padding: "3px 10px",
               borderRadius: "10px",
               textTransform: "uppercase",
               letterSpacing: "0.08em",
@@ -155,7 +155,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
             }}>
               {entityType.label}
             </span>
-            <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#666", flex: 1 }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", color: "#666", flex: 1 }}>
               {truncateKey(entityId)}
             </span>
             <a

@@ -12,6 +12,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const typeFilter = url.searchParams.get("type");
+    const repoFilter = url.searchParams.get("repo");
 
     let q = publicClient
       .buildQuery()
@@ -21,8 +22,12 @@ export async function GET(req: Request) {
 
     if (typeFilter) {
       q = q.where(eq("type", typeFilter));
-    } else {
-      // No type filter: get all entities owned by our wallet
+    }
+    if (repoFilter) {
+      q = q.where(eq("repo", repoFilter));
+    }
+    if (!typeFilter && !repoFilter) {
+      // No filters: get all entities owned by our wallet
       q = q.ownedBy(walletClient.account.address);
     }
 

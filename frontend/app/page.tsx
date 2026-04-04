@@ -391,24 +391,44 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-6 max-w-7xl mx-auto">
-      <header className="mb-4">
-        <h1 className="text-2xl font-bold text-[#f0f0f0]">Arkiv Agent Memory</h1>
-        <p className="text-sm text-[#888888] mt-1">
-          Multi-agent pipeline analyzing GitHub repos with on-chain memory on Kaolin testnet
+      <header style={{ marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-primary)", fontFamily: "'IBM Plex Mono', monospace" }}>
+            Arkiv Agent Memory
+          </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent)" }} className="animate-pulse-dot" />
+            <span style={{ fontSize: "9px", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 600 }}>
+              LIVE &middot; Kaolin testnet
+            </span>
+          </div>
+        </div>
+        <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
+          Multi-agent pipeline analyzing GitHub repos with on-chain memory
         </p>
       </header>
 
       {/* Tab bar */}
-      <div className="flex border-b border-[#2a2a2a] mb-6">
+      <div style={{ display: "flex", borderBottom: "1px solid var(--border)", marginBottom: "24px" }}>
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-5 py-2.5 text-[13px] font-medium transition-colors ${
-              activeTab === tab.id
-                ? "text-[#f0f0f0] border-b-2 border-[#1D9E75]"
-                : "text-[#888888] hover:text-[#f0f0f0]"
-            }`}
+            style={{
+              padding: "14px 24px",
+              fontSize: "13px",
+              fontWeight: 600,
+              letterSpacing: "0.05em",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === tab.id ? "2px solid var(--accent)" : "2px solid transparent",
+              color: activeTab === tab.id ? "var(--accent)" : "var(--text-muted)",
+              cursor: "pointer",
+              transition: "color 0.2s",
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}
+            onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.color = "var(--text-secondary)"; }}
+            onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.color = "var(--text-muted)"; }}
           >
             {tab.label}
           </button>

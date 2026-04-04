@@ -169,10 +169,10 @@ export default function HowItWorksTab() {
   return (
     <div style={{ maxWidth: "860px", margin: "0 auto" }}>
       {/* ── SECTION 1: Pipeline overview ── */}
-      <div style={{ marginBottom: "32px" }}>
-        <div style={{ fontSize: "9px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>Overview</div>
+      <div style={{ marginBottom: "40px" }}>
+        <div style={{ fontSize: "11px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>Overview</div>
         <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>Four agents. One memory layer.</h2>
-        <p style={{ fontSize: "12px", color: "#666", lineHeight: 1.8, maxWidth: "560px", marginBottom: "16px" }}>
+        <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, maxWidth: "560px", marginBottom: "16px" }}>
           You give a GitHub repo URL. Four agents run in sequence. No agent receives another agent&apos;s output as a function call. The only way they communicate is through Arkiv &mdash; a blockchain memory layer. Remove Arkiv and the system breaks.
         </p>
 
@@ -205,10 +205,10 @@ export default function HowItWorksTab() {
       </div>
 
       {/* ── SECTION 2: What is an entity ── */}
-      <div ref={sec2.ref} style={{ ...sec2.style, borderTop: "1px solid #1a1a1a", paddingTop: "32px", marginBottom: "32px" }}>
-        <div style={{ fontSize: "9px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>The memory layer</div>
+      <div ref={sec2.ref} style={{ ...sec2.style, borderTop: "1px solid #1a1a1a", paddingTop: "40px", marginBottom: "40px" }}>
+        <div style={{ fontSize: "11px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>The memory layer</div>
         <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>What is an entity?</h2>
-        <p style={{ fontSize: "12px", color: "#666", lineHeight: 1.8, marginBottom: "16px" }}>
+        <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, marginBottom: "16px" }}>
           An entity is a row in a database table &mdash; except no company controls the database. It lives on the Arkiv blockchain, it is queryable by attributes, and it automatically deletes itself after a set time. This is what the agents use as shared memory.
         </p>
 
@@ -219,7 +219,7 @@ export default function HowItWorksTab() {
           </div>
 
           {ENTITY_CARDS.map((card, idx) => (
-            <div key={idx} style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "10px 12px", marginBottom: "8px" }}>
+            <div key={idx} style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "2px 8px", borderRadius: "10px", background: card.pillBg, color: card.pillColor, border: `1px solid ${card.pillBorder}` }}>{card.type}</span>
                 <span style={{ fontSize: "10px", color: "#555", flex: 1, fontFamily: "monospace" }}>{card.key}</span>
@@ -242,10 +242,10 @@ export default function HowItWorksTab() {
       </div>
 
       {/* ── SECTION 3: Query animation ── */}
-      <div ref={sec3.ref} style={{ ...sec3.style, borderTop: "1px solid #1a1a1a", paddingTop: "32px", paddingBottom: "48px" }}>
-        <div style={{ fontSize: "9px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>Under the hood</div>
+      <div ref={sec3.ref} style={{ ...sec3.style, borderTop: "1px solid #1a1a1a", paddingTop: "40px", paddingBottom: "48px" }}>
+        <div style={{ fontSize: "11px", color: "#444", textTransform: "uppercase", letterSpacing: "0.18em", marginBottom: "6px" }}>Under the hood</div>
         <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>How Agent 3 reads from Arkiv.</h2>
-        <p style={{ fontSize: "12px", color: "#666", lineHeight: 1.8, marginBottom: "16px" }}>
+        <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, marginBottom: "16px" }}>
           Agent 3 has no access to Agent 1 or Agent 2&apos;s variables. It receives only a session label. It builds a query and executes it against the Kaolin chain. Here is exactly what happens.
         </p>
 
@@ -274,7 +274,7 @@ export default function HowItWorksTab() {
           </button>
         </div>
 
-        <div style={{ opacity: responseVisible ? 1 : 0, transition: "opacity 0.5s ease", background: "#001a10", border: "1px solid #0a3a20", borderRadius: "8px", padding: "12px", marginTop: "10px", fontSize: "10px", fontFamily: "monospace", lineHeight: 1.8, color: "#1D9E75" }}>
+        <div style={{ opacity: responseVisible ? 1 : 0, transition: "opacity 0.5s ease", background: "#001a10", border: "1px solid #0a3a20", borderRadius: "8px", padding: "12px", marginTop: "10px", fontSize: "12px", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.8, color: "#1D9E75" }}>
           {`result.entities \u2192 [
   {
     key: "0x4a2f...c91b",
@@ -298,12 +298,12 @@ export default function HowItWorksTab() {
             <span style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: modal.tagColor }}>{modal.tag}</span>
             <h3 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginTop: "6px", marginBottom: "14px" }}>{modal.title}</h3>
             {modal.steps.map((step) => (
-              <div key={step.num} style={{ background: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "10px 12px", marginBottom: "8px", display: "flex", gap: "10px" }}>
+              <div key={step.num} style={{ background: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", display: "flex", gap: "10px" }}>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: step.color, flexShrink: 0, marginTop: "1px" }}>{step.num}</span>
-                <span style={{ fontSize: "12px", color: "#666", lineHeight: 1.8, whiteSpace: "pre-line" }}>{step.text}</span>
+                <span style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, whiteSpace: "pre-line" }}>{step.text}</span>
               </div>
             ))}
-            <pre style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "6px", padding: "10px", fontSize: "10px", fontFamily: "monospace", lineHeight: 1.8, color: "#888", margin: "10px 0", whiteSpace: "pre" }}>{modal.codeBlock}</pre>
+            <pre style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "6px", padding: "10px", fontSize: "12px", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.8, color: "#888", margin: "10px 0", whiteSpace: "pre" }}>{modal.codeBlock}</pre>
           </div>
         </div>
       )}
