@@ -3,6 +3,12 @@
 // for code analysis, writes the structured result to Arkiv with TTL_WORKING.
 // Attributes written: { type: "code-analysis", sessionId, repo }
 // Returns the Arkiv entity ID of the written result.
+//
+// DX NOTE: The GitHub REST API returns file content as base64-encoded
+// strings. Each file fetch is a separate HTTP request. With 8 files
+// this means 8 sequential fetch() calls. The SDK has no batch file
+// fetch capability. A bulk content endpoint would significantly improve
+// agent build time.
 
 import Anthropic from "@anthropic-ai/sdk";
 import { walletClient } from "../arkiv/client";
@@ -26,21 +32,76 @@ function extractJson(text: string): object {
   }
 }
 
-const CODE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".py", ".sol", ".rs", ".go"];
-const MAX_FILES_TO_READ = 5;
+const MAX_FILES = 8;
 const MAX_FILE_SIZE = 8000;
 
-function pickKeyFiles(tree: { path: string; type: string }[]): string[] {
-  const candidates: string[] = [];
-  if (tree.some((f) => f.path === "package.json")) candidates.push("package.json");
-  const codeFiles = tree
-    .filter((f) => f.type === "blob" && CODE_EXTENSIONS.some((ext) => f.path.endsWith(ext)) && !f.path.includes("node_modules") && !f.path.includes(".test.") && !f.path.includes(".spec."))
-    .sort((a, b) => a.path.length - b.path.length);
-  for (const file of codeFiles) {
-    if (candidates.length >= MAX_FILES_TO_READ) break;
-    candidates.push(file.path);
+// Paths that signal Arkiv SDK usage or data-layer code
+const ARKIV_SIGNAL_KEYWORDS = [
+  "arkiv", "client", "db", "database", "storage",
+  "entity", "entities", "memory", "chain", "web3", "contract",
+];
+
+// Directories and patterns to skip
+const SKIP_PATTERNS = [
+  "node_modules/", "dist/", ".next/", "build/", "coverage/",
+  "__tests__/", ".test.", ".spec.", ".d.ts",
+];
+
+type FileEntry = { path: string; type: string };
+
+/**
+ * Priority-based file selection:
+ *   P1: package.json (always)
+ *   P2: Files whose path contains Arkiv-signal keywords (up to 6)
+ *   P3: Source files from src/ then root (fill remaining to MAX_FILES)
+ */
+function pickKeyFiles(
+  tree: FileEntry[],
+  log: (msg: string) => void
+): string[] {
+  const selected: string[] = [];
+  const blobs = tree.filter((f) => f.type === "blob");
+
+  const isSkipped = (p: string) => SKIP_PATTERNS.some((s) => p.includes(s));
+  const isCode = (p: string) => /\.(ts|tsx|js|jsx|py|sol|rs|go)$/.test(p);
+
+  // Priority 1 — always read package.json
+  if (blobs.some((f) => f.path === "package.json")) {
+    selected.push("package.json");
+    log("priority 1: package.json");
   }
-  return candidates;
+
+  // Priority 2 — Arkiv-signal files (up to 6)
+  const signalFiles = blobs.filter((f) => {
+    if (selected.includes(f.path)) return false;
+    if (isSkipped(f.path)) return false;
+    const lower = f.path.toLowerCase();
+    return ARKIV_SIGNAL_KEYWORDS.some((kw) => lower.includes(kw)) && isCode(lower);
+  });
+  for (const f of signalFiles) {
+    if (selected.length >= MAX_FILES || selected.length - 1 >= 6) break; // -1 for package.json
+    selected.push(f.path);
+    log(`priority 2 (arkiv-signal): ${f.path}`);
+  }
+
+  // Priority 3 — remaining source files, src/ first then root
+  const remaining = blobs
+    .filter((f) => !selected.includes(f.path) && !isSkipped(f.path) && isCode(f.path))
+    .sort((a, b) => {
+      const aInSrc = a.path.startsWith("src/") ? 0 : 1;
+      const bInSrc = b.path.startsWith("src/") ? 0 : 1;
+      if (aInSrc !== bInSrc) return aInSrc - bInSrc;
+      return a.path.length - b.path.length;
+    });
+
+  for (const f of remaining) {
+    if (selected.length >= MAX_FILES) break;
+    selected.push(f.path);
+    log(`priority 3 (source): ${f.path}`);
+  }
+
+  log(`total files selected: ${selected.length}`);
+  return selected;
 }
 
 type Emit = (event: AgentEvent) => void;
@@ -59,7 +120,8 @@ export async function runAgent2(
   const tree = await fetchFileTree(owner, repo);
   log(`File tree fetched \u00b7 ${tree.length} files found`);
 
-  const keyPaths = pickKeyFiles(tree);
+  const keyPaths = pickKeyFiles(tree, (msg) => log(msg));
+
   const fileContents: { path: string; content: string }[] = [];
   for (const path of keyPaths) {
     log(`Reading: ${path}`);
