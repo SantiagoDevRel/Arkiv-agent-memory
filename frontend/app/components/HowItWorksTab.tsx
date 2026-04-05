@@ -114,10 +114,10 @@ function useReveal() {
 
 function Chip({ label }: { label: string }) {
   return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "4px", padding: "2px 6px", fontSize: "9px", color: "#555", cursor: "help" }} className="group">
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "4px", padding: "2px 6px", fontSize: "9px", color: "#888", cursor: "help" }} className="group">
       {label}
       <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "14px", height: "14px", borderRadius: "50%", background: "#1a1a1a", border: "1px solid var(--border)", color: "#666", fontSize: "9px", fontWeight: 700, marginLeft: "4px" }}>i</span>
-      <span className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", background: "#1a1a1a", border: "1px solid var(--border)", borderRadius: "6px", padding: "8px 10px", fontSize: "10px", color: "#888", lineHeight: 1.6, width: "180px", zIndex: 50, fontFamily: "var(--font-mono)" }}>
+      <span className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", background: "#1a1a1a", border: "1px solid var(--border)", borderRadius: "6px", padding: "8px 10px", fontSize: "10px", color: "#aaa", lineHeight: 1.6, width: "180px", zIndex: 50, fontFamily: "var(--font-mono)" }}>
         {TOOLTIPS[label]}
       </span>
     </span>
@@ -174,7 +174,7 @@ export default function HowItWorksTab() {
     <div style={{ maxWidth: "860px", margin: "0 auto" }}>
       {/* ── SECTION 1: Pipeline overview ── */}
       <div style={{ marginBottom: "40px" }}>
-        <div style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>01 &middot; Overview</div>
+        <div style={{ fontSize: "12px", color: "#888", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>01 &middot; Overview</div>
         <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>Four agents. One memory layer.</h2>
         <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, maxWidth: "560px", marginBottom: "16px" }}>
           You give a GitHub repo URL. Four agents run in sequence. No agent receives another agent&apos;s output as a function call. The only way they communicate is through Arkiv &mdash; a blockchain memory layer. Remove Arkiv and the system breaks.
@@ -184,7 +184,7 @@ export default function HowItWorksTab() {
         <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px", maxWidth: "680px" }}>
           {/* GitHub repo row */}
           <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", textAlign: "center", marginBottom: "0" }}>
-            <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>GITHUB REPO URL</div>
+            <div style={{ fontSize: "12px", color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>GITHUB REPO URL</div>
             <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px" }}>github.com/fabianferno/clink</div>
           </div>
 
@@ -200,7 +200,7 @@ export default function HowItWorksTab() {
                   onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
                 >
                   <div style={{ fontSize: "12px", fontWeight: 700, color: row.accent, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "var(--font-mono)" }}>{row.label}</div>
-                  <div style={{ fontSize: "10px", color: row.accent, opacity: 0.7, marginTop: "4px" }}>click to explore &rarr;</div>
+                  <div style={{ fontSize: "10px", color: row.accent, marginTop: "4px" }}>click to explore &rarr;</div>
                 </div>
                 {/* Arrow */}
                 <span style={{ fontSize: "18px", color: "var(--accent-green)", opacity: 0.5, flexShrink: 0 }}>&rarr;</span>
@@ -214,7 +214,7 @@ export default function HowItWorksTab() {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: "10px", fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+        <div style={{ marginTop: "10px", fontSize: "11px", color: "#777", fontFamily: "var(--font-mono)" }}>
           Sequential execution &middot; Kaolin testnet &middot; Chain ID 60138453025 &middot; Wallet 0xa618...1C6
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function HowItWorksTab() {
       {/* ── SECTION 2: What is an entity ── */}
       <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)", margin: "0 0 80px 0" }} />
       <div ref={sec2.ref} style={{ ...sec2.style, marginBottom: "40px" }}>
-        <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>02 &middot; The memory layer</div>
+        <div style={{ fontSize: "12px", color: "#888", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>02 &middot; The memory layer</div>
         <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>What is an entity?</h2>
         <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: "16px" }}>
           An entity is a row in a database table &mdash; except no company controls the database. It lives on the Arkiv blockchain, it is queryable by attributes, and it automatically deletes itself after a set time. This is what the agents use as shared memory.
@@ -238,7 +238,7 @@ export default function HowItWorksTab() {
             <div key={idx} style={{ background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "2px 8px", borderRadius: "10px", background: card.pillBg, color: card.pillColor, border: `1px solid ${card.pillBorder}` }}>{card.type}</span>
-                <span style={{ fontSize: "10px", color: "#555", flex: 1, fontFamily: "var(--font-mono)" }}>{card.key}</span>
+                <span style={{ fontSize: "10px", color: "#888", flex: 1, fontFamily: "var(--font-mono)" }}>{card.key}</span>
                 <span style={{ fontSize: "9px", fontWeight: 700, color: card.ttlColor }}>{card.ttlText}</span>
               </div>
               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
@@ -248,7 +248,7 @@ export default function HowItWorksTab() {
                 <div style={{ height: "100%", borderRadius: "2px", width: `${card.barPct}%`, background: card.ttlColor }} />
               </div>
               {idx === 3 && (
-                <div style={{ fontSize: "9px", color: "#555", marginTop: "6px" }}>
+                <div style={{ fontSize: "9px", color: "#888", marginTop: "6px" }}>
                   This is the only entity that outlives the session. Working memory from Agents 1, 2, and 3 has already expired.
                 </div>
               )}
@@ -260,7 +260,7 @@ export default function HowItWorksTab() {
       <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)", margin: "0 0 80px 0" }} />
       {/* ── SECTION 3: Query animation ── */}
       <div ref={sec3.ref} style={{ ...sec3.style, paddingBottom: "48px" }}>
-        <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>03 &middot; Under the hood</div>
+        <div style={{ fontSize: "12px", color: "#888", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>03 &middot; Under the hood</div>
         <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>How Agent 3 reads from Arkiv.</h2>
         <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: "16px" }}>
           Agent 3 has no access to Agent 1 or Agent 2&apos;s variables. It receives only a session label. It builds a query and executes it against the Kaolin chain. Here is exactly what happens.
@@ -318,12 +318,12 @@ export default function HowItWorksTab() {
             {modal.steps.map((step) => (
               <div key={step.num} style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", display: "flex", gap: "10px" }}>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: step.color, flexShrink: 0, marginTop: "1px" }}>{step.num}</span>
-                <span style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, whiteSpace: "pre-line" }}>{step.text}</span>
+                <span style={{ fontSize: "14px", color: "#888", lineHeight: 1.8, whiteSpace: "pre-line" }}>{step.text}</span>
               </div>
             ))}
             <div style={{ position: "relative", margin: "10px 0" }}>
               <CopyButton text={modal.codeBlock} />
-              <pre style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "6px", padding: "10px", fontSize: "11px", fontFamily: "var(--font-mono)", lineHeight: 1.8, color: "var(--text-secondary)", whiteSpace: "pre" }}>{modal.codeBlock}</pre>
+              <pre style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "6px", padding: "10px", fontSize: "11px", fontFamily: "var(--font-mono)", lineHeight: 1.8, color: "#aaa", whiteSpace: "pre" }}>{modal.codeBlock}</pre>
             </div>
           </div>
         </div>

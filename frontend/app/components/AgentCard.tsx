@@ -92,15 +92,15 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
           style={status === "idle" && logs.length === 0 ? { background: "repeating-linear-gradient(0deg, #080808, #080808 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px)" } : undefined}
         >
           {logs.length === 0 && (status === "idle" || status === "waiting") ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", letterSpacing: "0.1em", gap: "8px", fontSize: "11px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#777", letterSpacing: "0.1em", gap: "8px", fontSize: "11px" }}>
               <span style={{ animation: "chainPulse 2s ease-in-out infinite", color: agentColor, opacity: 0.5 }}>&bull;</span>
               awaiting session
             </div>
           ) : (
             logs.map((log, i) => (
               <div key={i} style={{ display: "flex", gap: "8px" }}>
-                <span style={{ color: "var(--text-muted)", flexShrink: 0, userSelect: "none" }}>{log.time}</span>
-                <span style={{ color: log.success ? "var(--accent-green)" : log.highlight ? "var(--text-primary)" : "var(--text-secondary)" }}>{log.message}</span>
+                <span style={{ color: "#666", flexShrink: 0, userSelect: "none" }}>{log.time}</span>
+                <span style={{ color: log.success ? "var(--accent-green)" : log.highlight ? "var(--text-primary)" : "#999" }}>{log.message}</span>
               </div>
             ))
           )}
@@ -109,8 +109,8 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
         {entityId && (
           <div style={{ padding: "10px 14px", background: "var(--bg-deep)", border: "1px solid var(--border-subtle)", borderRadius: "8px", marginTop: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.1em", background: entityType.bg, color: entityType.color, border: `1px solid ${entityType.border}`, flexShrink: 0 }}>{entityType.label}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-muted)", flex: 1 }}>{truncateKey(entityId)}</span>
-            <a href={txHash ? `https://explorer.kaolin.hoodi.arkiv.network/tx/${txHash}` : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "var(--text-muted)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-green)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "#777", flex: 1 }}>{truncateKey(entityId)}</span>
+            <a href={txHash ? `https://explorer.kaolin.hoodi.arkiv.network/tx/${txHash}` : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#777", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-green)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
           </div>
         )}
       </div>

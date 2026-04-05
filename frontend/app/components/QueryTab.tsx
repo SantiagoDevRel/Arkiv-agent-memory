@@ -65,11 +65,11 @@ export default function QueryTab() {
       <h2 style={{ fontSize: "18px", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--text-primary)", marginBottom: "4px" }}>
         Query Arkiv memory
       </h2>
-      <p style={{ fontSize: "14px", color: "var(--text-secondary)", marginBottom: "24px" }}>
+      <p style={{ fontSize: "14px", color: "#888", marginBottom: "24px" }}>
         Select a preset query to execute against the Kaolin chain.
       </p>
 
-      <div style={{ fontSize: "11px", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.15em", marginBottom: "12px", fontWeight: 600 }}>
+      <div style={{ fontSize: "11px", textTransform: "uppercase", color: "#888", letterSpacing: "0.15em", marginBottom: "12px", fontWeight: 600 }}>
         QUICK QUERIES
       </div>
 
@@ -101,7 +101,7 @@ export default function QueryTab() {
       {active !== null && (
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-            <span style={{ fontSize: "11px", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.15em", fontWeight: 600 }}>RESULTS</span>
+            <span style={{ fontSize: "11px", textTransform: "uppercase", color: "#888", letterSpacing: "0.15em", fontWeight: 600 }}>RESULTS</span>
             <span style={{ fontSize: "10px", color: "var(--accent-green)" }}>{loading ? "..." : `${results.length} entities found`}</span>
           </div>
 

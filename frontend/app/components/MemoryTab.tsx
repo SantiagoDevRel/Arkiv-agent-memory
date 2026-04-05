@@ -70,7 +70,7 @@ function TtlRow({ expiresAtBlock, type }: { expiresAtBlock: string | null; type:
       <div style={{ height: "4px", background: "#1a1a1a", borderRadius: "2px", overflow: "hidden" }}>
         <div style={{ height: "100%", borderRadius: "2px", background: color, width: isPersistent ? "100%" : `${pct}%`, transition: "width 5s linear" }} />
       </div>
-      <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px", fontFamily: "var(--font-mono)" }}>
+      <div style={{ fontSize: "11px", color: "#777", marginTop: "4px", fontFamily: "var(--font-mono)" }}>
         Expires {expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })} at {expiresAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
       </div>
     </div>
@@ -135,7 +135,7 @@ export default function MemoryTab() {
       {filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 0" }}>
           <div style={{ fontSize: "32px", color: "var(--text-muted)", marginBottom: "8px" }}>&cir;</div>
-          <div style={{ fontSize: "14px", color: "var(--text-secondary)" }}>No entities found on Arkiv</div>
+          <div style={{ fontSize: "14px", color: "#888" }}>No entities found on Arkiv</div>
           <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Run the pipeline to create some</div>
         </div>
       ) : (
@@ -161,8 +161,8 @@ export default function MemoryTab() {
               </div>
 
               {projectName && <div style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", margin: "10px 0 4px" }}>{projectName}</div>}
-              {summary && <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "10px" }}>{summary}{summary.length >= 120 ? "..." : ""}</div>}
-              {repo && <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginBottom: "12px" }}>{repo}</div>}
+              {summary && <div style={{ fontSize: "14px", color: "#888", lineHeight: 1.6, marginBottom: "10px" }}>{summary}{summary.length >= 120 ? "..." : ""}</div>}
+              {repo && <div style={{ fontSize: "11px", color: "#777", fontFamily: "var(--font-mono)", marginBottom: "12px" }}>{repo}</div>}
 
               <TtlRow expiresAtBlock={entity.expiresAtBlock} type={entityType} />
             </div>
