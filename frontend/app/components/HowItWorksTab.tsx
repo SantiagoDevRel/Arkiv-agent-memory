@@ -14,68 +14,54 @@ const MODAL_DATA: Record<string, { tagColor: string; tag: string; title: string;
     tag: "Agent 1 \u00b7 README Reader",
     title: "Reads the README. Asks Claude what it means.",
     steps: [
-      { num: "01", color: "#EF9F27", text: "Calls https://api.github.com/repos/{owner}/{repo}/contents/README.md using raw fetch(). No library. Pure GitHub REST API. The response arrives base64-encoded. Agent 1 decodes it to plain text." },
-      { num: "02", color: "#EF9F27", text: "Sends the decoded README text to Claude with a structured prompt. Claude extracts: project name, one-sentence goal, tech stack mentioned in the text, and whether the Arkiv SDK is mentioned in the README description. Note: this is a text-level check, not a code check. Agent 2 does the real code inspection." },
-      { num: "03", color: "#EF9F27", text: "Writes one entity to Arkiv with TTL 300 seconds (5 minutes). This is working memory \u2014 it exists only long enough for Agent 3 to read it." },
+      { num: "01", color: "#EF9F27", text: "Fetches README.md from the GitHub REST API using raw fetch(). Response arrives base64-encoded and is decoded to plain text." },
+      { num: "02", color: "#EF9F27", text: "Sends the README text to Claude. Extracts: project name, goal, tech stack, and whether Arkiv SDK is mentioned." },
+      { num: "03", color: "#EF9F27", text: "Writes one entity to Arkiv. TTL: 300 seconds (5 minutes). Working memory \u2014 exists only long enough for Agent 3 to read it." },
     ],
-    codeBlock: `attributes written to Arkiv:
-{ key: 'type',      value: 'readme-summary' }
-{ key: 'sessionId', value: 'a3f9b2...' }
-{ key: 'repo',      value: 'fabianferno/clink' }`,
+    codeBlock: "{ type: 'readme-summary', sessionId, repo }",
   },
   agent2: {
     tagColor: "#EF9F27",
     tag: "Agent 2 \u00b7 Code Analyzer",
     title: "Reads the actual code. Finds Arkiv SDK usage.",
     steps: [
-      { num: "01", color: "#EF9F27", text: "Calls https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD?recursive=1 to get the full list of all files in the repo. Pure GitHub REST API." },
-      { num: "02", color: "#EF9F27", text: "Picks files using a priority system:\nPriority 1 \u2014 always reads package.json first.\nPriority 2 \u2014 any file whose path contains 'arkiv', 'client', 'db', 'storage', 'entity', or 'memory'. These are most likely to contain SDK usage.\nPriority 3 \u2014 fills remaining slots with other .ts/.js source files.\nMaximum 8 files total. Skips node_modules, dist, test files." },
-      { num: "03", color: "#EF9F27", text: "Sends all file contents to Claude. Claude checks: is @arkiv-network/sdk in package.json? Which files import it? Which SDK functions are actually called in the source code?" },
-      { num: "04", color: "#EF9F27", text: "Writes one entity to Arkiv with TTL 300 seconds." },
+      { num: "01", color: "#EF9F27", text: "Fetches the full file tree from GitHub REST API. Gets list of all files in the repo." },
+      { num: "02", color: "#EF9F27", text: "Picks up to 8 files using a priority system: package.json first, then any file with 'arkiv' in the path, then other source files." },
+      { num: "03", color: "#EF9F27", text: "Sends all file contents to Claude. Checks: is @arkiv-network/sdk installed? Which files import it? Which functions are called?" },
+      { num: "04", color: "#EF9F27", text: "Writes one entity to Arkiv. TTL: 300 seconds." },
     ],
-    codeBlock: `payload written:
-{ language, framework, fileCount,
-  arkivUsage: {
-    found: true,
-    files: ['src/lib/arkiv.ts'],
-    observations: 'createEntity used, no queryBuilder found'
-  }
-}`,
+    codeBlock: `{ language, framework, fileCount,
+  arkivUsage: { found: true, files: [...] } }`,
   },
   agent3: {
     tagColor: "#378ADD",
     tag: "Agent 3 \u00b7 Arkiv Expert",
     title: "Queries Arkiv. Scores actual SDK usage from 0 to 10.",
     steps: [
-      { num: "01", color: "#378ADD", text: "Receives only the session label as input. Nothing else. Queries Arkiv twice using buildQuery() to find what Agents 1 and 2 wrote during this run. No direct access to their variables." },
-      { num: "02", color: "#378ADD", text: "Loads the full Arkiv SDK type definitions from the installed package at runtime. This is the actual source of truth injected into Claude's context, not a summary." },
-      { num: "03", color: "#378ADD", text: "Sends both entity payloads plus the full SDK types to Claude. Claude scores the project's actual SDK usage 0 to 10 based only on confirmed code evidence. A project with no SDK import scores 0." },
-      { num: "04", color: "#378ADD", text: "Writes one entity to Arkiv with TTL 300 seconds." },
+      { num: "01", color: "#378ADD", text: "Receives only the session label. Queries Arkiv twice with buildQuery() to retrieve what Agents 1 and 2 wrote." },
+      { num: "02", color: "#378ADD", text: "Loads full Arkiv SDK type definitions from node_modules at runtime. This is the expert knowledge Claude uses to evaluate." },
+      { num: "03", color: "#378ADD", text: "Scores actual SDK usage 0\u201310. Based only on confirmed code evidence \u2014 not claims or potential." },
+      { num: "04", color: "#378ADD", text: "Writes one entity to Arkiv. TTL: 300 seconds." },
     ],
-    codeBlock: `scoring scale:
-0   \u2192 SDK not found anywhere in the repo
-1   \u2192 in package.json but no imports in source code
+    codeBlock: `0   \u2192 SDK not found
+1   \u2192 in package.json, no imports
 2-3 \u2192 client setup only
-4-5 \u2192 createEntity OR buildQuery, not both
-6-7 \u2192 createEntity + buildQuery + expiresIn + attributes
-8-9 \u2192 QueryBuilder predicates + event subscriptions or batch
-10  \u2192 comprehensive usage across all SDK features`,
+4-5 \u2192 createEntity OR buildQuery
+6-7 \u2192 both + expiresIn + attributes
+8-9 \u2192 predicates + event subscriptions
+10  \u2192 comprehensive usage`,
   },
   agent4: {
     tagColor: "#8b7cf8",
     tag: "Agent 4 \u00b7 Reporter",
     title: "Reads everything from Arkiv. Writes the report that survives.",
     steps: [
-      { num: "01", color: "#8b7cf8", text: "Queries Arkiv for all 3 entities from this run using the session label. Verifies all three are present before continuing." },
-      { num: "02", color: "#8b7cf8", text: "Sends all three payloads to Claude. Claude synthesizes a final structured report: project overview, tech stack, Arkiv fit score, recommendations, and a one-line verdict." },
-      { num: "03", color: "#8b7cf8", text: "Writes the final report entity with TTL 2,592,000 seconds (30 days). All other entities from this run expire within 5 minutes. This one persists for a month." },
-      { num: "04", color: "#8b7cf8", text: "Because this entity persists, future runs can compare across projects. Which repos scored above 7? What SDK features do most developers miss? All answerable by querying Arkiv without re-running any analysis." },
+      { num: "01", color: "#8b7cf8", text: "Queries Arkiv for all 3 entities from this run. Verifies all are present before continuing." },
+      { num: "02", color: "#8b7cf8", text: "Sends all three payloads to Claude. Synthesizes final report: overview, fit score, recommendations, verdict." },
+      { num: "03", color: "#8b7cf8", text: "Writes final report with TTL 2,592,000 seconds (30 days). The only entity that outlives the session." },
+      { num: "04", color: "#8b7cf8", text: "Future runs query this entity. Cross-project analysis without re-running any agents." },
     ],
-    codeBlock: `attributes written:
-{ key: 'type',      value: 'final-report' }
-{ key: 'sessionId', value: 'a3f9b2...' }
-{ key: 'repo',      value: 'fabianferno/clink' }
-{ key: 'date',      value: '2026-04-03' }`,
+    codeBlock: "{ type: 'final-report', sessionId, repo, date }",
   },
 };
 
@@ -311,7 +297,7 @@ export default function HowItWorksTab() {
       {/* ── MODAL ── */}
       {modal && (
         <div onClick={() => setModalId(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "14px", width: "min(520px, 92vw)", maxHeight: "80vh", overflowY: "auto", padding: "24px", position: "relative", animation: "modalReveal 0.25s ease" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "14px", width: "min(640px, 92vw)", maxHeight: "80vh", overflowY: "auto", padding: "28px 32px", position: "relative", animation: "modalReveal 0.25s ease" }}>
             <button onClick={() => setModalId(null)} style={{ position: "absolute", top: "14px", right: "16px", background: "none", border: "none", color: "#444", fontSize: "18px", cursor: "pointer", fontFamily: "var(--font-mono)" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f0f0")} onMouseLeave={(e) => (e.currentTarget.style.color = "#444")}>&times;</button>
             <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: modal.tagColor }}>{modal.tag}</span>
             <h3 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginTop: "6px", marginBottom: "14px" }}>{modal.title}</h3>
