@@ -62,14 +62,14 @@ export default function QueryTab() {
 
   return (
     <div style={{ maxWidth: "720px", margin: "0 auto", padding: "24px 0" }}>
-      <h2 style={{ fontSize: "16px", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--text-primary)", marginBottom: "4px" }}>
+      <h2 style={{ fontSize: "18px", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--text-primary)", marginBottom: "4px" }}>
         Query Arkiv memory
       </h2>
-      <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "24px" }}>
+      <p style={{ fontSize: "14px", color: "var(--text-secondary)", marginBottom: "24px" }}>
         Select a preset query to execute against the Kaolin chain.
       </p>
 
-      <div style={{ fontSize: "9px", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.15em", marginBottom: "12px", fontWeight: 600 }}>
+      <div style={{ fontSize: "11px", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.15em", marginBottom: "12px", fontWeight: 600 }}>
         QUICK QUERIES
       </div>
 
@@ -91,8 +91,8 @@ export default function QueryTab() {
             onMouseEnter={(e) => { if (active !== i) { e.currentTarget.style.borderColor = "var(--accent-green)"; e.currentTarget.style.background = "#0d1a14"; } }}
             onMouseLeave={(e) => { if (active !== i) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg-panel)"; } }}
           >
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>{q.label}</div>
-            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", opacity: 0.8, lineHeight: 1.6 }}>{q.code}</div>
+            <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>{q.label}</div>
+            <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", opacity: 0.8, lineHeight: 1.6 }}>{q.code}</div>
           </button>
         ))}
       </div>
@@ -101,18 +101,18 @@ export default function QueryTab() {
       {active !== null && (
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-            <span style={{ fontSize: "9px", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.15em", fontWeight: 600 }}>RESULTS</span>
+            <span style={{ fontSize: "11px", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.15em", fontWeight: 600 }}>RESULTS</span>
             <span style={{ fontSize: "10px", color: "var(--accent-green)" }}>{loading ? "..." : `${results.length} entities found`}</span>
           </div>
 
           <div style={{ position: "relative", marginBottom: "16px" }}>
             <CopyButton text={fullQuery} />
-            <pre style={{ background: "var(--bg-deep)", border: "1px solid var(--border-subtle)", borderLeft: "2px solid var(--accent-green)", borderRadius: "0 8px 8px 0", padding: "12px 16px", fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.8 }}>{fullQuery}</pre>
+            <pre style={{ background: "var(--bg-deep)", border: "1px solid var(--border-subtle)", borderLeft: "2px solid var(--accent-green)", borderRadius: "0 8px 8px 0", padding: "12px 16px", fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.8 }}>{fullQuery}</pre>
           </div>
 
           <div ref={resultsRef} />
           {loading ? (
-            <div style={{ padding: "28px 0", display: "flex", alignItems: "center", gap: "12px", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--accent-green)", letterSpacing: "0.05em" }}>
+            <div style={{ padding: "28px 0", display: "flex", alignItems: "center", gap: "12px", fontFamily: "var(--font-mono)", fontSize: "14px", color: "var(--accent-green)", letterSpacing: "0.05em" }}>
               <span style={{ animation: "chainPulse 0.7s ease-in-out infinite", fontSize: "14px" }}>&cir;</span>
               Querying Kaolin chain...
             </div>

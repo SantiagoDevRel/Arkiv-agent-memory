@@ -155,58 +155,67 @@ export default function HowItWorksTab() {
 
   const modal = modalId ? MODAL_DATA[modalId] : null;
 
-  // ─── Pipeline nodes ───
-  const nodes: { id: string; label: string; bg: string; border: string; color: string; isArkiv?: boolean }[] = [
-    { id: "", label: "GitHub\nRepo", bg: "#111", border: "#2a2a2a", color: "#888" },
-    { id: "agent1", label: "Agent 1\nREADME", bg: "#1a1000", border: "#3a2a00", color: "#EF9F27" },
-    { id: "arkiv1", label: "ARKIV\nwrites", bg: "#001a10", border: "#0a3a20", color: "#1D9E75", isArkiv: true },
-    { id: "agent2", label: "Agent 2\nCode", bg: "#1a1000", border: "#3a2a00", color: "#EF9F27" },
-    { id: "arkiv2", label: "ARKIV\nwrites", bg: "#001a10", border: "#0a3a20", color: "#1D9E75", isArkiv: true },
-    { id: "agent3", label: "Agent 3\nExpert", bg: "#0a1a2a", border: "#1a3a5a", color: "#378ADD" },
-    { id: "arkiv3", label: "ARKIV\nreads+writes", bg: "#001a10", border: "#0a3a20", color: "#1D9E75", isArkiv: true },
-    { id: "agent4", label: "Agent 4\nReporter", bg: "#0e0a1a", border: "#2a1a4a", color: "#8b7cf8" },
+  // ─── Pipeline rows ───
+  const pipelineRows = [
+    { id: "agent1", label: "AGENT 1 \u00b7 README READER", accent: "#5ECBAA", bg: "#0a1a16", border: "#1a3a2a", arkiv: "WRITES" },
+    { id: "agent2", label: "AGENT 2 \u00b7 CODE ANALYZER", accent: "#EF9F27", bg: "#1a1000", border: "#3a2800", arkiv: "WRITES" },
+    { id: "agent3", label: "AGENT 3 \u00b7 ARKIV EXPERT", accent: "#1D9E75", bg: "#001a10", border: "#0a3a20", arkiv: "READS + WRITES" },
+    { id: "agent4", label: "AGENT 4 \u00b7 REPORTER", accent: "#8b7cf8", bg: "#0e0a1a", border: "#2a1a4a", arkiv: "READS + WRITES", extra: "(30 days)" },
   ];
+
+  const Connector = () => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", paddingLeft: "32px", margin: "4px 0" }}>
+      <div style={{ width: "2px", height: "20px", background: "var(--accent-green)", opacity: 0.4 }} />
+      <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid var(--accent-green)", opacity: 0.4, marginLeft: "-4px" }} />
+    </div>
+  );
 
   return (
     <div style={{ maxWidth: "860px", margin: "0 auto" }}>
       {/* ── SECTION 1: Pipeline overview ── */}
       <div style={{ marginBottom: "40px" }}>
-        <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>01 &middot; Overview</div>
-        <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>Four agents. One memory layer.</h2>
-        <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, maxWidth: "560px", marginBottom: "16px" }}>
+        <div style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>01 &middot; Overview</div>
+        <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>Four agents. One memory layer.</h2>
+        <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, maxWidth: "560px", marginBottom: "16px" }}>
           You give a GitHub repo URL. Four agents run in sequence. No agent receives another agent&apos;s output as a function call. The only way they communicate is through Arkiv &mdash; a blockchain memory layer. Remove Arkiv and the system breaks.
         </p>
 
-        {/* Pipeline strip */}
-        <div style={{ position: "relative" }}>
-        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px", display: "flex", alignItems: "center", gap: "10px", overflowX: "auto" }}>
-          {nodes.map((node, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {i > 0 && <span style={{ color: "#2a2a2a", fontSize: "14px", padding: "0 4px", flexShrink: 0 }}>&rarr;</span>}
-              <div
-                onClick={() => node.id.startsWith("agent") ? setModalId(node.id) : undefined}
-                style={{
-                  background: node.bg, border: `${node.isArkiv ? "2px" : "1px"} solid ${node.border}`, color: node.color,
-                  borderRadius: "8px", padding: "10px 12px", fontSize: node.isArkiv ? "9px" : "10px", fontWeight: 700,
-                  letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "center",
-                  minWidth: node.isArkiv ? "70px" : "78px", flexShrink: 0, whiteSpace: "pre-line",
-                  cursor: node.id.startsWith("agent") ? "pointer" : "default",
-                  fontFamily: "var(--font-mono)",
-                }}
-              >
-                {node.label}
-                {node.id.startsWith("agent") && (
-                  <div style={{ fontSize: "8px", color: "#444", fontWeight: 400, textTransform: "none", marginTop: "3px" }}>click to explore</div>
-                )}
+        {/* Vertical pipeline */}
+        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px", maxWidth: "680px" }}>
+          {/* GitHub repo row */}
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", textAlign: "center", marginBottom: "0" }}>
+            <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>GITHUB REPO URL</div>
+            <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px" }}>github.com/fabianferno/clink</div>
+          </div>
+
+          {pipelineRows.map((row) => (
+            <div key={row.id}>
+              <Connector />
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {/* Agent node */}
+                <div
+                  onClick={() => setModalId(row.id)}
+                  style={{ flex: 1, background: row.bg, border: `1px solid ${row.border}`, borderLeft: `3px solid ${row.accent}`, borderRadius: "10px", padding: "14px 18px", cursor: "pointer", transition: "all 0.2s" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.15)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
+                >
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: row.accent, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "var(--font-mono)" }}>{row.label}</div>
+                  <div style={{ fontSize: "10px", color: row.accent, opacity: 0.7, marginTop: "4px" }}>click to explore &rarr;</div>
+                </div>
+                {/* Arrow */}
+                <span style={{ fontSize: "18px", color: "var(--accent-green)", opacity: 0.5, flexShrink: 0 }}>&rarr;</span>
+                {/* Arkiv node */}
+                <div style={{ width: "160px", flexShrink: 0, background: "#001a10", border: "1px solid #0a3a20", borderRadius: "10px", padding: "12px 14px", textAlign: "center" }}>
+                  <div style={{ fontSize: "11px", color: "var(--accent-green)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>ARKIV</div>
+                  <div style={{ fontSize: "9px", color: "var(--accent-green)", opacity: 0.6, marginTop: "2px" }}>{row.arkiv}</div>
+                  {row.extra && <div style={{ fontSize: "9px", color: "var(--accent-purple)", marginTop: "2px" }}>{row.extra}</div>}
+                </div>
               </div>
             </div>
           ))}
         </div>
-        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "60px", pointerEvents: "none", background: "linear-gradient(to right, transparent, #080808)", borderRadius: "0 12px 12px 0" }} />
-        </div>
-        <div style={{ textAlign: "right", fontSize: "9px", color: "var(--text-muted)", marginTop: "6px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>scroll to see all agents &rarr;</div>
-        <div style={{ marginTop: "8px", fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-          Sequential execution &middot; Kaolin testnet &middot; Chain ID 60138453025 &middot; Wallet 0xa618A2736431f24C26F1C8Dac9CA00ECc845a1C6
+        <div style={{ marginTop: "10px", fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+          Sequential execution &middot; Kaolin testnet &middot; Chain ID 60138453025 &middot; Wallet 0xa618...1C6
         </div>
       </div>
 
@@ -214,8 +223,8 @@ export default function HowItWorksTab() {
       <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)", margin: "0 0 80px 0" }} />
       <div ref={sec2.ref} style={{ ...sec2.style, marginBottom: "40px" }}>
         <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>02 &middot; The memory layer</div>
-        <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>What is an entity?</h2>
-        <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, marginBottom: "16px" }}>
+        <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>What is an entity?</h2>
+        <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: "16px" }}>
           An entity is a row in a database table &mdash; except no company controls the database. It lives on the Arkiv blockchain, it is queryable by attributes, and it automatically deletes itself after a set time. This is what the agents use as shared memory.
         </p>
 
@@ -252,8 +261,8 @@ export default function HowItWorksTab() {
       {/* ── SECTION 3: Query animation ── */}
       <div ref={sec3.ref} style={{ ...sec3.style, paddingBottom: "48px" }}>
         <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>03 &middot; Under the hood</div>
-        <h2 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginBottom: "8px" }}>How Agent 3 reads from Arkiv.</h2>
-        <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, marginBottom: "16px" }}>
+        <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>How Agent 3 reads from Arkiv.</h2>
+        <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: "16px" }}>
           Agent 3 has no access to Agent 1 or Agent 2&apos;s variables. It receives only a session label. It builds a query and executes it against the Kaolin chain. Here is exactly what happens.
         </p>
 
@@ -275,10 +284,10 @@ export default function HowItWorksTab() {
         </div>
 
         <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
-          <button onClick={() => runBuildAnim(false)} style={{ background: "#0a1a2a", border: "1px solid #1a3a5a", color: "#378ADD", padding: "7px 16px", borderRadius: "6px", fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em" }}>
+          <button onClick={() => runBuildAnim(false)} style={{ background: "#0a1a2a", border: "1px solid #1a3a5a", color: "#378ADD", padding: "7px 16px", borderRadius: "6px", fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em" }}>
             Build query &rarr;
           </button>
-          <button onClick={() => runBuildAnim(true)} style={{ background: "#001a10", border: "1px solid #0a3a20", color: "#1D9E75", padding: "7px 16px", borderRadius: "6px", fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em" }}>
+          <button onClick={() => runBuildAnim(true)} style={{ background: "#001a10", border: "1px solid #0a3a20", color: "#1D9E75", padding: "7px 16px", borderRadius: "6px", fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em" }}>
             Show Arkiv response &rarr;
           </button>
         </div>
@@ -294,7 +303,7 @@ export default function HowItWorksTab() {
 ]`}
         </div>
 
-        <div style={{ fontSize: "10px", color: "#444", marginTop: "8px", fontFamily: "var(--font-mono)", lineHeight: 1.6 }}>
+        <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "8px", fontFamily: "var(--font-mono)", lineHeight: 1.6 }}>
           eq() means exactly equal to. gte() means greater than or equal to &mdash; useful for filtering by score, date, or any number. These are filter functions from the Arkiv SDK passed into .where() in the query builder.
         </div>
       </div>
@@ -304,12 +313,12 @@ export default function HowItWorksTab() {
         <div onClick={() => setModalId(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "14px", width: "min(520px, 92vw)", maxHeight: "80vh", overflowY: "auto", padding: "24px", position: "relative", animation: "modalReveal 0.25s ease" }}>
             <button onClick={() => setModalId(null)} style={{ position: "absolute", top: "14px", right: "16px", background: "none", border: "none", color: "#444", fontSize: "18px", cursor: "pointer", fontFamily: "var(--font-mono)" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f0f0")} onMouseLeave={(e) => (e.currentTarget.style.color = "#444")}>&times;</button>
-            <span style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: modal.tagColor }}>{modal.tag}</span>
-            <h3 style={{ fontSize: "16px", color: "#f0f0f0", fontWeight: 700, marginTop: "6px", marginBottom: "14px" }}>{modal.title}</h3>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: modal.tagColor }}>{modal.tag}</span>
+            <h3 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginTop: "6px", marginBottom: "14px" }}>{modal.title}</h3>
             {modal.steps.map((step) => (
               <div key={step.num} style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", display: "flex", gap: "10px" }}>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: step.color, flexShrink: 0, marginTop: "1px" }}>{step.num}</span>
-                <span style={{ fontSize: "13px", color: "#666", lineHeight: 1.8, whiteSpace: "pre-line" }}>{step.text}</span>
+                <span style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, whiteSpace: "pre-line" }}>{step.text}</span>
               </div>
             ))}
             <div style={{ position: "relative", margin: "10px 0" }}>

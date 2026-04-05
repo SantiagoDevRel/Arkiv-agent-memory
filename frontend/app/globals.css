@@ -25,7 +25,7 @@ body {
   background-color: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.6;
   background-image:
     linear-gradient(rgba(29,158,117,0.04) 1px, transparent 1px),
@@ -101,7 +101,7 @@ body {
   height: 180px; min-height: 180px; overflow-y: auto;
   background: var(--bg-deep); border: 1px solid var(--border-subtle);
   border-radius: 8px; padding: 10px 12px;
-  font-family: var(--font-mono); font-size: 12px; line-height: 1.7;
+  font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
   scrollbar-width: thin; scrollbar-color: #222 var(--bg-deep);
 }
 

@@ -68,7 +68,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
           </div>
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>
             Agent {num} &middot; {name}
           </div>
           <div style={{ fontSize: "10px", marginTop: "2px" }}>
@@ -82,7 +82,7 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
             {status === "done" && <span style={{ color: "var(--accent-green)" }}>entity written to Arkiv</span>}
           </div>
         </div>
-        <span style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`, fontSize: "9px", fontWeight: 700, padding: "3px 10px", borderRadius: "20px", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-mono)", flexShrink: 0 }}>{badge.text}</span>
+        <span style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`, fontSize: "10px", fontWeight: 700, padding: "3px 10px", borderRadius: "20px", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-mono)", flexShrink: 0 }}>{badge.text}</span>
       </div>
 
       <div style={{ padding: "14px 18px" }}>
@@ -108,9 +108,9 @@ export default function AgentCard({ agentId, name, status, logs, entityId, txHas
 
         {entityId && (
           <div style={{ padding: "10px 14px", background: "var(--bg-deep)", border: "1px solid var(--border-subtle)", borderRadius: "8px", marginTop: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.1em", background: entityType.bg, color: entityType.color, border: `1px solid ${entityType.border}`, flexShrink: 0 }}>{entityType.label}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", flex: 1 }}>{truncateKey(entityId)}</span>
-            <a href={txHash ? `https://explorer.kaolin.hoodi.arkiv.network/tx/${txHash}` : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "10px", color: "var(--text-muted)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-green)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
+            <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.1em", background: entityType.bg, color: entityType.color, border: `1px solid ${entityType.border}`, flexShrink: 0 }}>{entityType.label}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-muted)", flex: 1 }}>{truncateKey(entityId)}</span>
+            <a href={txHash ? `https://explorer.kaolin.hoodi.arkiv.network/tx/${txHash}` : `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "var(--text-muted)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-green)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
           </div>
         )}
       </div>

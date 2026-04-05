@@ -65,12 +65,12 @@ function TtlRow({ expiresAtBlock, type }: { expiresAtBlock: string | null; type:
     <div style={{ marginTop: "12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
         <span style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "var(--font-mono)" }}>Time remaining</span>
-        <span style={{ fontSize: "10px", fontWeight: 600, fontFamily: "var(--font-mono)", color }}>{isPersistent ? "PERSISTED \u00b7 30 days" : `${Math.round(pct)}% \u00b7 ${timeString}`}</span>
+        <span style={{ fontSize: "12px", fontWeight: 600, fontFamily: "var(--font-mono)", color }}>{isPersistent ? "PERSISTED \u00b7 30 days" : `${Math.round(pct)}% \u00b7 ${timeString}`}</span>
       </div>
       <div style={{ height: "4px", background: "#1a1a1a", borderRadius: "2px", overflow: "hidden" }}>
         <div style={{ height: "100%", borderRadius: "2px", background: color, width: isPersistent ? "100%" : `${pct}%`, transition: "width 5s linear" }} />
       </div>
-      <div style={{ fontSize: "9px", color: "var(--text-muted)", marginTop: "4px", fontFamily: "var(--font-mono)" }}>
+      <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px", fontFamily: "var(--font-mono)" }}>
         Expires {expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })} at {expiresAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
       </div>
     </div>
@@ -114,19 +114,19 @@ export default function MemoryTab() {
     <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px 0" }}>
       {/* Filter bar */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
-        <button onClick={() => setFilter("all")} style={{ padding: "8px 16px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", transition: "all 0.2s", background: filter === "all" ? "var(--accent-green)" : "var(--bg-card)", color: filter === "all" ? "#000" : "var(--text-muted)", border: `1px solid ${filter === "all" ? "var(--accent-green)" : "var(--border)"}` }}>
+        <button onClick={() => setFilter("all")} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", transition: "all 0.2s", background: filter === "all" ? "var(--accent-green)" : "var(--bg-card)", color: filter === "all" ? "#000" : "var(--text-muted)", border: `1px solid ${filter === "all" ? "var(--accent-green)" : "var(--border)"}` }}>
           All ({entities.length})
         </button>
         {types.map((t) => {
           const count = entities.filter((e) => e.attributes.find((a) => a.key === "type")?.value === t).length;
           const active = filter === t;
           return (
-            <button key={t} onClick={() => setFilter(t)} style={{ padding: "8px 16px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", transition: "all 0.2s", background: active ? "var(--accent-green)" : "var(--bg-card)", color: active ? "#000" : "var(--text-muted)", border: `1px solid ${active ? "var(--accent-green)" : "var(--border)"}` }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", transition: "all 0.2s", background: active ? "var(--accent-green)" : "var(--bg-card)", color: active ? "#000" : "var(--text-muted)", border: `1px solid ${active ? "var(--accent-green)" : "var(--border)"}` }}>
               {t} ({count})
             </button>
           );
         })}
-        <button onClick={fetchEntities} disabled={loading} style={{ marginLeft: "auto", padding: "8px 16px", fontSize: "11px", fontWeight: 600, borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", background: "var(--bg-card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
+        <button onClick={fetchEntities} disabled={loading} style={{ marginLeft: "auto", padding: "8px 16px", fontSize: "12px", fontWeight: 600, borderRadius: "6px", fontFamily: "var(--font-mono)", cursor: "pointer", background: "var(--bg-card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
           {loading ? "..." : "\u21bb Refresh"}
         </button>
       </div>
@@ -160,9 +160,9 @@ export default function MemoryTab() {
                 <button onClick={() => handleDelete(entity.entityId)} disabled={deletingKeys.has(entity.entityId)} style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", background: "none", color: "var(--text-muted)", fontSize: "14px", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent-red)"; e.currentTarget.style.background = "rgba(226,75,74,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "none"; }}>{deletingKeys.has(entity.entityId) ? "..." : "\u00d7"}</button>
               </div>
 
-              {projectName && <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", margin: "10px 0 4px" }}>{projectName}</div>}
-              {summary && <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "10px" }}>{summary}{summary.length >= 120 ? "..." : ""}</div>}
-              {repo && <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginBottom: "12px" }}>{repo}</div>}
+              {projectName && <div style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", margin: "10px 0 4px" }}>{projectName}</div>}
+              {summary && <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "10px" }}>{summary}{summary.length >= 120 ? "..." : ""}</div>}
+              {repo && <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginBottom: "12px" }}>{repo}</div>}
 
               <TtlRow expiresAtBlock={entity.expiresAtBlock} type={entityType} />
             </div>
