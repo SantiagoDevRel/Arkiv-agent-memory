@@ -171,17 +171,17 @@ export default function HowItWorksTab() {
   );
 
   return (
-    <div style={{ maxWidth: "860px", margin: "0 auto" }}>
+    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 48px" }}>
       {/* ── SECTION 1: Pipeline overview ── */}
       <div style={{ marginBottom: "40px" }}>
         <div style={{ fontSize: "12px", color: "#888", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>01 &middot; Overview</div>
         <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>Four agents. One memory layer.</h2>
-        <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, maxWidth: "560px", marginBottom: "16px" }}>
+        <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, maxWidth: "760px", marginBottom: "16px" }}>
           You give a GitHub repo URL. Four agents run in sequence. No agent receives another agent&apos;s output as a function call. The only way they communicate is through Arkiv &mdash; a blockchain memory layer. Remove Arkiv and the system breaks.
         </p>
 
         {/* Vertical pipeline */}
-        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px", maxWidth: "680px" }}>
+        <div style={{ background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
           {/* GitHub repo row */}
           <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", textAlign: "center", marginBottom: "0" }}>
             <div style={{ fontSize: "12px", color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>GITHUB REPO URL</div>

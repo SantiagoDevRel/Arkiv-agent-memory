@@ -390,7 +390,7 @@ export default function Home() {
   }, [repoUrl, running]);
 
   return (
-    <main className="min-h-screen max-w-7xl mx-auto">
+    <main style={{ minHeight: "100vh", maxWidth: "1200px", margin: "0 auto", padding: "0 40px" }}>
       <header style={{ borderBottom: "1px solid var(--border)", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--bg-page)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.05em", lineHeight: 1, userSelect: "none", whiteSpace: "nowrap" }}>[ A ]</div>
@@ -529,7 +529,7 @@ export default function Home() {
       </div>
 
       {/* How It Works tab */}
-      {activeTab === "how" && <div style={{ padding: "24px" }}><HowItWorksTab /></div>}
+      {activeTab === "how" && <HowItWorksTab />}
 
       {/* Memory tab */}
       {activeTab === "memory" && <div style={{ padding: "0 24px" }}><MemoryTab /></div>}
