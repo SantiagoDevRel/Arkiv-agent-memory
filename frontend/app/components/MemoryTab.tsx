@@ -1,6 +1,11 @@
 // frontend/app/components/MemoryTab.tsx
 // Full-width single-column view of all Arkiv entities. Filterable, deleteable.
 
+// DX NOTE: Arkiv TTL controls queryability, not blockchain immutability.
+// Expired entities are removed from the queryable index but the original
+// transaction data remains permanently visible on the block explorer.
+// This is important for auditability use cases.
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -12,7 +17,13 @@ type EntityItem = {
   attributes: { key: string; value: string }[];
 };
 
-const BLOCK_TIME = 2;
+const BLOCK_TIME_SECONDS = 2;
+
+async function fetchCurrentBlock(): Promise<number> {
+  const res = await fetch("/api/block");
+  const { blockNumber } = await res.json();
+  return blockNumber;
+}
 
 const TYPE_COLORS: Record<string, string> = {
   "final-report": "var(--accent-purple)",
@@ -33,15 +44,15 @@ function TtlRow({ expiresAtBlock, type }: { expiresAtBlock: string | null; type:
     if (!expiresAtBlock) return;
     const expiresAt = Number(expiresAtBlock);
     let mounted = true;
-    async function fetch_() {
+    async function recalculate() {
       try {
-        const res = await fetch("/api/block");
-        const { blockNumber } = await res.json();
-        if (mounted) setSecondsLeft(Math.max(0, (expiresAt - blockNumber) * BLOCK_TIME));
+        const currentBlock = await fetchCurrentBlock();
+        const secondsRemaining = Math.max(0, (expiresAt - currentBlock) * BLOCK_TIME_SECONDS);
+        if (mounted) setSecondsLeft(secondsRemaining);
       } catch { /* */ }
     }
-    fetch_();
-    const i = setInterval(fetch_, 10000);
+    recalculate();
+    const i = setInterval(recalculate, 10000);
     return () => { mounted = false; clearInterval(i); };
   }, [expiresAtBlock]);
 
