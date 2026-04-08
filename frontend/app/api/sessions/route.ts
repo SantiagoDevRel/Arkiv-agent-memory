@@ -33,7 +33,26 @@ export async function GET(req: Request) {
 
     const result = await q.limit(100).fetch();
 
-    const sessions = result.entities.map((entity) => {
+    // Fetch current block to filter out expired entities
+    let currentBlock: number | null = null;
+    try {
+      const blockRes = await fetch("https://kaolin.hoodi.arkiv.network/rpc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", method: "eth_blockNumber", id: 1 }),
+      });
+      const blockData = await blockRes.json();
+      currentBlock = parseInt(blockData.result, 16);
+    } catch { /* proceed without filtering if block fetch fails */ }
+
+    const activeEntities = currentBlock
+      ? result.entities.filter((entity) => {
+          if (!entity.expiresAtBlock) return true;
+          return Number(entity.expiresAtBlock) > currentBlock;
+        })
+      : result.entities;
+
+    const sessions = activeEntities.map((entity) => {
       let payload: unknown = null;
       try {
         payload = entity.toJson();
