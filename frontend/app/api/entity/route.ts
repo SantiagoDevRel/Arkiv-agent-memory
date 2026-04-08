@@ -4,7 +4,7 @@
 // Calls walletClient.deleteEntity({ entityKey }) from the backend Arkiv client.
 // Returns: { success: true, key } or { success: false, error: string }
 
-import { walletClient } from "../../../../src/arkiv/client";
+import { walletClient } from "../../../src-backend/arkiv/client";
 import type { Hex } from "viem";
 
 export const dynamic = "force-dynamic";

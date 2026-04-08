@@ -3,7 +3,7 @@
 // Optional query param ?type=final-report filters by type.
 // Without ?type, returns all entities owned by the wallet.
 
-import { publicClient, walletClient } from "../../../../src/arkiv/client";
+import { publicClient, walletClient } from "../../../src-backend/arkiv/client";
 import { eq } from "@arkiv-network/sdk/query";
 
 export const dynamic = "force-dynamic";

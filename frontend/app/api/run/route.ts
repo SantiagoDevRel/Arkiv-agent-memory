@@ -8,8 +8,8 @@
 //   { type: "pipeline-done", report, entityId, sessionId }
 //   { type: "error", message }
 
-import { runPipeline } from "../../../../src/index";
-import type { AgentEvent } from "../../../../src/index";
+import { runPipeline } from "../../../src-backend/index";
+import type { AgentEvent } from "../../../src-backend/index";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;

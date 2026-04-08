@@ -5,7 +5,7 @@
 // 3. Returns the results + the generated QueryBuilder code as a string.
 
 import Anthropic from "@anthropic-ai/sdk";
-import { publicClient } from "../../../../src/arkiv/client";
+import { publicClient } from "../../../src-backend/arkiv/client";
 import { eq, neq, gt, gte, lt, lte } from "@arkiv-network/sdk/query";
 import type { Hex } from "viem";
 
