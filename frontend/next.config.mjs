@@ -1,13 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["@arkiv-network/sdk", "viem"],
+    serverExternalPackages: [
+      "@arkiv-network/sdk",
+      "@anthropic-ai/sdk",
+      "viem",
+      "dotenv"
+    ],
   },
-  // Allow importing from the backend src/ folder outside the Next.js root
-  webpack: (config) => {
-    config.resolve.symlinks = false;
-    return config;
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = config.externals || []
+      if (Array.isArray(config.externals)) {
+        config.externals.push(
+          "@arkiv-network/sdk",
+          "@anthropic-ai/sdk",
+          "viem",
+          "dotenv"
+        )
+      }
+    }
+    return config
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig
