@@ -435,3 +435,180 @@ All agents sign transactions with the same wallet. This means parallel
 writes from different agents must be serialized to avoid nonce collisions
 (see DX-04). A future architecture could give each agent its own wallet
 for true autonomy, at the cost of more complex key management.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+# EXTRA 
+
+## How Each Agent Was Prompted
+
+No fine-tuning or model training was done. Each agent runs on
+`claude-sonnet-4-20250514` with a carefully crafted system prompt.
+The "expertise" of each agent comes from what context is injected
+into Claude's prompt at runtime, not from any model modification.
+
+All Claude API calls use `temperature: 0` to make outputs deterministic.
+The same repo analyzed multiple times produces the same score every time.
+
+---
+
+### Agent 1 — README Reader
+
+**What it does:** Fetches `README.md` from the GitHub REST API using
+raw `fetch()`. The response arrives base64-encoded and is decoded to
+plain text before being sent to Claude.
+
+**System prompt:** Instructs Claude to extract structured JSON from
+the raw README text: project name, one-sentence goal, tech stack
+mentioned in the description, and whether Arkiv SDK is referenced
+anywhere in the text.
+
+**Important distinction:** This is a text-level check only. Agent 1
+looks for Arkiv mentioned in the README prose — not in the code.
+Agent 2 does the real code inspection.
+
+**Output schema:**
+```json
+{
+  "name": "string",
+  "goal": "string",
+  "techStack": ["string"],
+  "usesArkiv": true,
+  "summary": "string"
+}
+```
+
+---
+
+### Agent 2 — Code Analyzer
+
+**What it does:** Fetches the full file tree from the GitHub REST API,
+then reads up to 8 files using a priority system:
+
+1. Always reads `package.json` first (confirms installed dependencies)
+2. Reads any file whose path contains "arkiv", "client", "db",
+   "storage", "entity", or "memory" (most likely to contain SDK usage)
+3. Fills remaining slots with other `.ts` / `.js` source files
+
+**System prompt:** Instructs Claude to analyze file contents and
+specifically look for `@arkiv-network/sdk` in `package.json` and
+source files. Returns structured JSON with language, framework,
+file count, and exact Arkiv usage evidence including which files
+contain imports and which SDK functions are called.
+
+**Output schema:**
+```json
+{
+  "language": "string",
+  "framework": "string",
+  "fileCount": 32,
+  "arkivUsage": {
+    "found": true,
+    "files": ["src/lib/arkiv.ts"],
+    "observations": "string"
+  },
+  "qualityNotes": "string"
+}
+```
+
+---
+
+### Agent 3 — Arkiv Expert
+
+This is the most carefully constructed agent. Three layers of context
+are injected into Claude's prompt at runtime:
+
+**Layer 1 — Live SDK type definitions (read at runtime)**
+
+The agent reads `node_modules/@arkiv-network/sdk/dist/index.d.ts`
+directly from the installed package on every run. Claude receives the
+actual TypeScript type definitions, not a summary. If Arkiv ships a
+new SDK version and you run `npm update`, Agent 3 automatically picks
+up the new types without any code changes.
+
+**Layer 2 — Curated feature inventory (hardcoded in system prompt)**
+
+A complete feature inventory compiled by manually researching the
+official SDK source, npm page, GitHub organization, and all 8 hackathon
+submissions. This gives Claude a ground-truth list of every SDK feature
+with descriptions of what each does — something the raw types alone
+cannot provide.
+
+Features covered: `createPublicClient`, `createWalletClient`,
+`createEntity`, `updateEntity`, `deleteEntity`, `extendEntity`,
+`changeOwnership`, `mutateEntities` (batch), `getEntity`, `buildQuery`,
+`getEntityCount`, `getBlockTiming`, QueryBuilder methods (`.where()`,
+`.ownedBy()`, `.createdBy()`, `.orderBy()`, `.limit()`, `.fetch()`,
+`.count()`), all query predicates (`eq`, `neq`, `gt`, `gte`, `lt`,
+`lte`, `and`, `or`, `not`), `ExpirationTime` helpers, `subscribeEntityEvents`,
+`jsonToPayload`, `stringToPayload`, and all supported content types.
+
+**Layer 3 — Strict scoring rubric (hardcoded in system prompt)**
+
+Without a strict rubric, Claude scores based on potential fit rather
+than actual evidence. A repo with zero Arkiv usage was scoring 9/10
+before this rubric was added. After the fix: zero usage = 0, always.
+
+```
+0   → SDK not found anywhere in the repo
+1   → in package.json but no imports in source code
+2-3 → client setup only (createPublicClient or createWalletClient)
+4-5 → createEntity OR buildQuery used, not both
+6-7 → createEntity + buildQuery + expiresIn + attributes together
+8-9 → QueryBuilder with predicates + event subscriptions or batch
+10  → comprehensive usage across all SDK features
+```
+
+**Output schema:**
+```json
+{
+  "fitScore": 7,
+  "featuresUsed": ["createEntity", "buildQuery().where(eq()).fetch()"],
+  "featuresMissed": ["subscribeEntityEvents", "mutateEntities"],
+  "suggestions": ["string"],
+  "verdict": "string",
+  "confidence": "high",
+  "patternComparison": "string"
+}
+```
+
+---
+
+### Agent 4 — Reporter
+
+**What it does:** Queries Arkiv for all three prior entities from the
+current session, verifies all three are present, then sends all payloads
+to Claude for synthesis.
+
+**System prompt:** Instructs Claude to produce a final structured report
+combining findings from all three agents: project overview, tech stack,
+Arkiv fit score, recommendations, and a one-line summary.
+
+**What makes it powerful:** Agent 4 does not just report on the current
+run. Because final reports persist for 30 days, future runs can query
+previous reports and produce cross-project insights — "which projects
+used `expiresIn`?", "what SDK features are developers consistently
+ignoring?" — without re-running any analysis.
+
+**Output schema:**
+```json
+{
+  "projectName": "string",
+  "goal": "string",
+  "techStack": ["string"],
+  "arkivFitScore": 7,
+  "featuresUsed": ["string"],
+  "featuresMissed": ["string"],
+  "recommendations": ["string"],
+  "oneLineSummary": "string"
+}
+```
+
+---
+
+### Design principle across all agents
+
+The scoring rubric is the DevRel expertise baked into the system prompt.
+The live SDK type reading is the technical accuracy layer. Both are
+needed: the rubric gives Claude better scoring context than raw types
+alone, while the live types ensure Claude has the exact current API
+surface regardless of SDK version.
