@@ -8,7 +8,6 @@
 //   3. Agent 4 (reporter) — reads all three outputs from Arkiv
 // All inter-agent communication goes through Arkiv. No data passed as function args.
 
-import "dotenv/config";
 import crypto from "crypto";
 import { parseGitHubUrl } from "./github/parser";
 import { runAgent1 } from "./agents/agent1-readme-reader";

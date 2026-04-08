@@ -6,7 +6,6 @@
 //   RPC: https://kaolin.hoodi.arkiv.network/rpc
 //   Explorer: https://explorer.kaolin.hoodi.arkiv.network
 
-import "dotenv/config";
 import { createPublicClient, createWalletClient, http } from "@arkiv-network/sdk";
 import { kaolin } from "@arkiv-network/sdk/chains";
 import { privateKeyToAccount } from "viem/accounts";
