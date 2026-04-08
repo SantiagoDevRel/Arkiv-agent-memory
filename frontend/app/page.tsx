@@ -66,7 +66,7 @@ function truncKey(id: string): string {
 
 function explorerUrl(txHash?: string, entityId?: string): string {
   if (txHash) return `https://explorer.kaolin.hoodi.arkiv.network/tx/${txHash}`;
-  if (entityId) return `https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entityId}`;
+  if (entityId) return `https://explorer.kaolin.hoodi.arkiv.network/entity/${entityId}`;
   return "#";
 }
 

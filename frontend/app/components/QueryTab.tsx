@@ -132,7 +132,7 @@ export default function QueryTab() {
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", padding: "3px 10px", borderRadius: "20px", letterSpacing: "0.08em", background: `${typeColor}18`, color: typeColor }}>{entityType}</span>
                     <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-muted)", flex: 1 }}>{truncId(entity.entityId)}</span>
-                    <a href={`https://explorer.kaolin.hoodi.arkiv.network/search-results?q=${entity.entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "none" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-green)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
+                    <a href={`https://explorer.kaolin.hoodi.arkiv.network/entity/${entity.entityId}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "none" }} onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-green)")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>view &rarr;</a>
                   </div>
                   {projectName && <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", margin: "10px 0 4px" }}>{projectName}</div>}
                   {summary && <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.6 }}>{summary}{summary.length >= 120 ? "..." : ""}</div>}
