@@ -242,44 +242,7 @@ documentation that parallel writes from one wallet are unsupported.
 
 ---
 
-### DX-05: `.js` extensions in imports break Next.js webpack
-
-**Reproduction:** Backend TypeScript files use Node16 module resolution
-requiring `.js` extensions. When imported inside a Next.js API route,
-webpack cannot resolve `.ts` files referenced by `.js` extensions.
-
-**Fix:** Strip all `.js` extensions from imports used inside Next.js.
-
-**Suggestion:** Document this when the SDK is used in monorepo projects
-mixing Node.js backend with Next.js frontend.
-
----
-
-### DX-06: `dotenv` path mismatch when importing backend from Next.js
-
-**Reproduction:** Backend uses `import "dotenv/config"` which loads
-`.env` relative to CWD. When Next.js runs from a subdirectory, the
-parent `.env` is not found and all env vars silently become `undefined`.
-
-**Fix:** Use `frontend/.env.local` and remove dotenv imports from
-backend files when deployed through Next.js.
-
-**Suggestion:** Document this pattern for monorepo deployments.
-
----
-
-### DX-07: Arkiv SDK triggers console logging during Next.js build
-
-**Reproduction:** Import `src/arkiv/client.ts` from a Next.js API route
-and run `next build`. SDK initialization runs at build time and logs
-to the build output.
-
-**Suggestion:** Lazy initialization or a way to suppress SDK startup
-logs during build.
-
----
-
-### DX-08: No native access control on entities
+### DX-05: No native access control on entities
 
 All data stored on Arkiv is publicly readable by anyone who queries
 the chain. No mechanism exists to restrict read access to specific
@@ -287,19 +250,13 @@ wallet addresses.
 
 **Workaround:** Encrypt the JSON payload before calling `jsonToPayload()`.
 
-**Recommendation for current Arkiv use:**
-- Good fit: public verifiable data, open knowledge bases, audit logs,
-  collaborative data where trustlessness matters more than privacy
-- Not recommended without encryption: user personal data, credentials,
-  private business data
-
 **Suggestion:** A permissioned entity type where only the creator or
 a whitelist of addresses can retrieve the payload would unlock enterprise
 use cases currently blocked by this limitation.
 
 ---
 
-### DX-09: Inconsistent terminology between JavaScript and Python SDKs
+### DX-06: Inconsistent terminology between JavaScript and Python SDKs
 
 **JavaScript SDK** (npmjs.com/package/@arkiv-network/sdk):
 Describes Arkiv as "open, trustless, permissionless."
@@ -314,40 +271,7 @@ contradict each other.
 
 ---
 
-### DX-10: Agent 2 blind file selection
-
-**Issue found during build:** The initial implementation read
-`package.json` plus up to 4 arbitrary `.ts` files. If Arkiv SDK usage
-was in file 8 of 20, Agent 2 would miss it and incorrectly score
-the project as having no Arkiv integration.
-
-**Fix applied:** Priority-based file selection:
-1. Always read `package.json` first
-2. Read any file whose path contains "arkiv", "client", "db",
-   "storage", "entity", or "memory"
-3. Fill remaining slots with other source files (max 8 total)
-
-**SDK observation:** GitHub REST API has no batch file content endpoint.
-Each file requires a separate `fetch()` call. With 8 files this means
-8 sequential HTTP requests.
-
-**Suggestion:** A bulk content endpoint would significantly improve
-build time for agents needing broad code coverage.
-
----
-
-### DX-11: Session grouping pattern is undocumented
-
-The `sessionId` pattern used throughout this project — attaching a
-randomly generated string as an attribute to group related entities —
-is not documented anywhere in the official SDK as a recommended pattern.
-
-**Suggestion:** Document common multi-agent patterns like session
-grouping as official SDK examples.
-
----
-
-### DX-12: TTL controls queryability, not blockchain immutability — undocumented
+### DX-07: TTL controls queryability vs permanent deletion — undocumented
 
 **Discovery:** When an entity's TTL expires, the official docs describe
 it as "automatic data pruning." This language implies the data is fully
@@ -359,10 +283,6 @@ deleted. It is not.
 - The original transaction data remains permanently on the blockchain
 - Anyone with the `txHash` can retrieve the full payload forever via
   the block explorer or `eth_getTransactionByHash` RPC call
-
-**Verified by:** Running the pipeline, waiting for the 5-minute TTL
-to expire, then visiting the original `txHash` on the Kaolin explorer
-and finding the complete JSON payload still readable.
 
 **Practical impact:** A developer building an audit system using Arkiv
 might only store the `entityKey`. After TTL expires, they lose SDK
@@ -380,7 +300,7 @@ alongside `entityKey`.
 
 ---
 
-### DX-13: No documentation on the difference between `deleteEntity()` and TTL expiry
+### DX-08: No documentation on the difference between `deleteEntity()` and TTL expiry
 
 **Discovery:** The Arkiv block explorer shows three distinct entity states:
 Active, Expired, and Deleted. These are meaningfully different:
