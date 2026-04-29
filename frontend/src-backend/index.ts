@@ -14,6 +14,7 @@ import { runAgent1 } from "./agents/agent1-readme-reader";
 import { runAgent2 } from "./agents/agent2-code-analyzer";
 import { runAgent3 } from "./agents/agent3-arkiv-expert";
 import { runAgent4 } from "./agents/agent4-reporter";
+import { runAgent5 } from "./agents/agent5-tracker-pusher";
 import { publicClient } from "./arkiv/client";
 import { readMemory } from "./arkiv/memory";
 
@@ -71,9 +72,16 @@ export async function runPipeline(repoUrl: string, onEvent?: OnEvent) {
   const agent4Payload = agent4Entities.length > 0 ? agent4Entities[0].toJson() : {};
   emit({ type: "agent-done", agentId: "agent4", entityId: agent4.entityKey, txHash: agent4.txHash, payload: agent4Payload, message: "Final report generated" });
 
+  // Agent 5 — ETHLisbon tracker pusher (writes tracker-row to Arkiv + optional POST)
+  emit({ type: "agent-start", agentId: "agent5", message: "Pushing to public tracker..." });
+  const agent5 = await runAgent5(owner, repo, sessionId, emit);
+  const agent5Entities = await readMemory(publicClient, { type: "tracker-row", sessionId });
+  const agent5Payload = agent5Entities.length > 0 ? agent5Entities[0].toJson() : {};
+  emit({ type: "agent-done", agentId: "agent5", entityId: agent5.entityKey, txHash: agent5.txHash, payload: agent5Payload, message: `Tracker row published${agent5.pushedToApi ? " (Arkiv + API)" : " (Arkiv only)"}` });
+
   emit({ type: "pipeline-done", report: agent4Payload, entityId: agent4.entityKey, txHash: agent4.txHash, sessionId, message: "Pipeline complete!" });
 
-  return { sessionId, reportEntityId: agent4.entityKey, report: agent4Payload };
+  return { sessionId, reportEntityId: agent4.entityKey, report: agent4Payload, trackerRowEntityId: agent5.entityKey };
 }
 
 // CLI entry point — only runs when executed directly (not imported)
