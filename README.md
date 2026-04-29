@@ -10,16 +10,32 @@ communicating exclusively through Arkiv as a shared memory layer.
 
 ## What This Does
 
-You give a GitHub repo URL. Four agents run in sequence:
+You give a GitHub repo URL. **Five** agents run in sequence (on the `feat/ethlisbon-judging` branch):
 
 1. **README Reader** — fetches and analyzes the README via GitHub REST API
 2. **Code Analyzer** — reads the file tree and key source files
-3. **Arkiv Expert** — queries Arkiv for agent 1+2 findings, scores SDK usage 0-10
+3. **Arkiv Expert** — queries Arkiv for agent 1+2 findings, scores against the **ETHLisbon rubric** (35/25/20/20 weights, single 0-100 total)
 4. **Reporter** — synthesizes everything into a persistent 30-day report
+5. **Tracker Pusher** *(ETHLisbon-only)* — writes a `tracker-row` entity to Arkiv (immutable source of truth) and optionally POSTs to a Supabase API for the public dashboard at `tracker.arkiv.dev/ethlisbon`
 
 No agent receives another agent's output as a function parameter.
 **Arkiv is the only communication channel between agents.**
 Remove Arkiv and the system breaks entirely. That is the correct dependency level.
+
+### ETHLisbon judging rubric (Agent 3 + 4)
+
+| Weight | Criterion |
+|---|---|
+| **35%** | Code quality + Arkiv-native usage (correct entities/attributes/TTL/ownership, no anti-patterns) |
+| **25%** | Novel use of Arkiv primitives ($creator/$owner split, batch mutations, time-bounded coordination) |
+| **20%** | Demo polish + clarity of pitch |
+| **20%** | Builder behavior (commits, docs, README quality, attribution) |
+
+Total: weighted 0-100 score per project. Agent 5 publishes it to the tracker.
+
+### Dogfooding angle
+
+Agent 5 writes the tracker-row as an Arkiv entity (TTL = 30 days). Each judging session is queryable on-chain. Future hackathons inherit the dataset. **We judge Arkiv apps using Arkiv as the source of truth.**
 
 ---
 
@@ -31,9 +47,11 @@ GitHub repo URL
 Agent 1 (README Reader)  →  writes to Arkiv  →  TTL: 5 min
 Agent 2 (Code Analyzer)  →  writes to Arkiv  →  TTL: 5 min
       ↓ (Agent 3 reads both from Arkiv)
-Agent 3 (Arkiv Expert)   →  writes to Arkiv  →  TTL: 5 min
+Agent 3 (Arkiv Expert)   →  writes to Arkiv  →  TTL: 5 min   [ETHLisbon rubric: 35/25/20/20 → 0-100]
       ↓ (Agent 4 reads all three from Arkiv)
 Agent 4 (Reporter)       →  writes to Arkiv  →  TTL: 30 days
+      ↓ (Agent 5 reads final report from Arkiv)
+Agent 5 (Tracker Pusher) →  writes tracker-row to Arkiv (TTL 30d) + optional Supabase POST
 ```
 
 **Memory tiers:**

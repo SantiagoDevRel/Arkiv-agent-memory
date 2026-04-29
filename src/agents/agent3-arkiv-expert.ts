@@ -80,7 +80,13 @@ ${JSON.stringify(codeAnalysis, null, 2)}`;
   log("Claude responded \u00b7 parsing evaluation...");
 
   const evaluation = extractJson(responseText) as Record<string, unknown>;
-  log(`Fit score: ${evaluation.fitScore ?? "?"}/10`);
+  const scores = (evaluation.scores as Record<string, number>) || {};
+  log(`Score breakdown (ETHLisbon rubric):`);
+  log(`  35% Code quality + Arkiv-native: ${scores.codeQuality ?? "?"}/100`);
+  log(`  25% Novelty: ${scores.novelty ?? "?"}/100`);
+  log(`  20% Demo polish: ${scores.demoPolish ?? "?"}/100`);
+  log(`  20% Builder behavior: ${scores.builderBehavior ?? "?"}/100`);
+  log(`Total weighted: ${scores.total ?? "?"}/100`, { highlight: true });
   log(`Features used: ${Array.isArray(evaluation.featuresUsed) ? evaluation.featuresUsed.length : 0}`);
   log(`Features missed: ${Array.isArray(evaluation.featuresMissed) ? evaluation.featuresMissed.length : 0}`);
   log(`Confidence: ${evaluation.confidence || "N/A"}`);
