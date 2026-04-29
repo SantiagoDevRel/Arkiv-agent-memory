@@ -95,8 +95,18 @@ function ReportModal({
   const projectName = (a4.projectName as string) || "Unknown Project";
   const summary = (a4.oneLineSummary as string) || (a4.goal as string) || "";
   const techStack = (a4.techStack as string[]) || [];
-  const score = (a4.arkivFitScore as number) ?? 0;
-  const scoreColor = score <= 3 ? "#E24B4A" : score <= 6 ? "#EF9F27" : "#1D9E75";
+  // Score schema: new = scores.total (0-100, ETHLisbon rubric).
+  // Legacy fallback: arkivFitScore (0-10), scaled ×10 for color thresholds.
+  const scoresObj = (a4.scores as Record<string, number> | undefined) || {};
+  const score = scoresObj.total ?? ((a4.arkivFitScore as number ?? 0) * 10);
+  const scoreColor = score <= 40 ? "#E24B4A" : score <= 70 ? "#EF9F27" : "#1D9E75";
+  const scoreBreakdown = scoresObj.codeQuality != null ? {
+    codeQuality: scoresObj.codeQuality,
+    novelty: scoresObj.novelty,
+    demoPolish: scoresObj.demoPolish,
+    builderBehavior: scoresObj.builderBehavior,
+  } : null;
+  const status = (a4.status as string) || "";
   const featuresUsed = (a4.featuresUsed as string[]) || [];
   const featuresMissed = (a4.featuresMissed as string[]) || [];
   const recommendations = (a4.recommendations as string[]) || [];
@@ -152,8 +162,8 @@ function ReportModal({
         <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
           <div style={{ display: "flex", gap: "12px" }}>
             <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
-              <div style={{ fontSize: "28px", fontWeight: 700, color: scoreColor }}>{score}</div>
-              <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: "4px" }}>Fit Score</div>
+              <div style={{ fontSize: "28px", fontWeight: 700, color: scoreColor }}>{score}<span style={{ fontSize: "13px", color: "#666", marginLeft: "2px" }}>/100</span></div>
+              <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: "4px" }}>ETHLisbon Score{status ? ` · ${status}` : ""}</div>
             </div>
             <div style={{ flex: 1, background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
               <div style={{ fontSize: "28px", fontWeight: 700, color: "#1D9E75" }}>{featuresUsed.length}</div>
@@ -165,6 +175,26 @@ function ReportModal({
             </div>
           </div>
         </div>
+
+        {/* SECTION B2 — Score breakdown (ETHLisbon rubric 35/25/20/20) */}
+        {scoreBreakdown && (
+          <div style={{ borderTop: "1px solid #1a1a1a", padding: "16px 0" }}>
+            <SectionTitle>Score Breakdown</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
+              {[
+                { label: "Code · 35%", value: scoreBreakdown.codeQuality },
+                { label: "Novelty · 25%", value: scoreBreakdown.novelty },
+                { label: "Demo · 20%", value: scoreBreakdown.demoPolish },
+                { label: "Builder · 20%", value: scoreBreakdown.builderBehavior },
+              ].map((c) => (
+                <div key={c.label} style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "6px", padding: "10px", textAlign: "center" }}>
+                  <div style={{ fontSize: "18px", fontWeight: 700, color: "#f0f0f0" }}>{c.value ?? "?"}</div>
+                  <div style={{ fontSize: "9.5px", color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: "2px" }}>{c.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* SECTION C — Tech stack */}
         {techStack.length > 0 && (

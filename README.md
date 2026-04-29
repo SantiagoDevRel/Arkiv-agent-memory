@@ -576,10 +576,16 @@ before this rubric was added. After the fix: zero usage = 0, always.
 10  → comprehensive usage across all SDK features
 ```
 
-**Output schema:**
+**Output schema (ETHLisbon rubric — `feat/ethlisbon-judging` branch):**
 ```json
 {
-  "fitScore": 7,
+  "scores": {
+    "codeQuality": 78,
+    "novelty": 65,
+    "demoPolish": 80,
+    "builderBehavior": 72,
+    "total": 73
+  },
   "featuresUsed": ["createEntity", "buildQuery().where(eq()).fetch()"],
   "featuresMissed": ["subscribeEntityEvents", "mutateEntities"],
   "suggestions": ["string"],
@@ -588,6 +594,7 @@ before this rubric was added. After the fix: zero usage = 0, always.
   "patternComparison": "string"
 }
 ```
+*Legacy schema (main branch, pre-ETHLisbon) used a single `fitScore: 0-10` instead of `scores` object.*
 
 ---
 
@@ -607,19 +614,27 @@ previous reports and produce cross-project insights — "which projects
 used `expiresIn`?", "what SDK features are developers consistently
 ignoring?" — without re-running any analysis.
 
-**Output schema:**
+**Output schema (ETHLisbon rubric — `feat/ethlisbon-judging` branch):**
 ```json
 {
   "projectName": "string",
   "goal": "string",
   "techStack": ["string"],
-  "arkivFitScore": 7,
+  "scores": {
+    "codeQuality": 78,
+    "novelty": 65,
+    "demoPolish": 80,
+    "builderBehavior": 72,
+    "total": 73
+  },
   "featuresUsed": ["string"],
   "featuresMissed": ["string"],
   "recommendations": ["string"],
-  "oneLineSummary": "string"
+  "oneLineSummary": "string",
+  "status": "active"
 }
 ```
+*Legacy schema (main branch) used `arkivFitScore: 0-10` instead of `scores` object and lacked `status`.*
 
 ---
 
