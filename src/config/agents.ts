@@ -46,24 +46,28 @@ precise, evidence-based score breakdown.
 
 ==== ETHLisbon Judging Rubric (single 0-100 total) ====
 
-  35% — Code quality + Arkiv-native usage
-        Correct use of entities, attributes, TTL, ownership semantics.
-        Idiomatic SDK calls. No anti-patterns (e.g., updateEntity used as patch,
-        sequential createEntity loops where mutateEntities would batch).
+  30% — Technical execution + Arkiv usage
+        Does the project actually work? Demo runs without crashes, deploys cleanly.
+        Uses @arkiv-network/sdk correctly without anti-patterns (no updateEntity-as-patch,
+        no sequential createEntity loops, correct TTL/ownership semantics).
+        Code is reasonable quality (not perfect, but no glaring red flags).
 
-  25% — Novel use of Arkiv primitives
-        Creator/$owner split for tamper-proof origin + transferable ownership.
-        Time-bounded coordination (TTL aligned to deadlines).
-        Batch mutations. extendEntity-on-activity patterns.
-        New combinations that other ETHLisbon submissions don't show.
+  25% — Product viability
+        Does this solve a real problem for an identifiable user?
+        Could someone actually adopt this tomorrow, or is it a 36h demo gimmick that dies Monday?
+        Is the value proposition clear and defensible? Is there a path from MVP to v1?
 
-  20% — Demo polish + clarity of pitch
-        Working demo, deployed, accessible. Clear README explaining what it does.
-        Pre-loaded sample data. Visuals match the pitch.
+  25% — Scalability
+        Does the architecture survive 100x or 1000x users?
+        Are TTL/storage choices sustainable in production cost-wise?
+        Did the team plan for growth or only for the demo?
+        Batch mutations, smart indexing, hybrid Arkiv+IPFS where appropriate.
 
-  20% — Builder behavior
-        Frequent commits across the 36h window. Docs that explain decisions.
-        Tests if any. README quality. Attribution to libraries used.
+  20% — Demo polish + business clarity
+        Can a non-technical viewer get the value prop in 3 minutes?
+        Pitch + README + landing communicate the story coherently.
+        Even a simple monetization plan (free + paid tier, B2B vs B2C) is articulated.
+        No magic-thinking like "tokenomics will figure it out".
 
 ==== Rules ====
 - Score each criterion 0-100 independently, then compute weighted total.
@@ -77,11 +81,11 @@ precise, evidence-based score breakdown.
 Return JSON only. Schema:
 {
   scores: {
-    codeQuality: number,           // 0-100
-    novelty: number,               // 0-100
-    demoPolish: number,            // 0-100
-    builderBehavior: number,       // 0-100
-    total: number                  // weighted: 0.35*cq + 0.25*n + 0.20*d + 0.20*bb, rounded
+    technical: number,             // 0-100 — does it work + use Arkiv well?
+    viability: number,             // 0-100 — real product or 36h gimmick?
+    scalability: number,           // 0-100 — survives growth?
+    demo: number,                  // 0-100 — pitch + business clarity
+    total: number                  // weighted: 0.30*t + 0.25*v + 0.25*s + 0.20*d, rounded
   },
   featuresUsed: string[],
   featuresMissed: string[],
@@ -105,10 +109,10 @@ Schema:
   goal: string,
   techStack: string[],
   scores: {
-    codeQuality: number,           // 0-100, from Agent 3
-    novelty: number,                // 0-100, from Agent 3
-    demoPolish: number,             // 0-100, from Agent 3
-    builderBehavior: number,        // 0-100, from Agent 3
+    technical: number,              // 0-100, from Agent 3 (tech execution + Arkiv usage)
+    viability: number,              // 0-100, from Agent 3 (real product vs gimmick)
+    scalability: number,            // 0-100, from Agent 3 (architecture for growth)
+    demo: number,                   // 0-100, from Agent 3 (pitch + business clarity)
     total: number                   // 0-100, weighted total from Agent 3
   },
   featuresUsed: string[],
@@ -133,10 +137,10 @@ Return JSON only. Schema:
   repo: string,                     // owner/repo
   total: number,                    // scores.total from Agent 4
   scores: {
-    codeQuality: number,
-    novelty: number,
-    demoPolish: number,
-    builderBehavior: number
+    technical: number,
+    viability: number,
+    scalability: number,
+    demo: number
   },
   status: "active" | "stalled" | "shipped",
   oneLineSummary: string,

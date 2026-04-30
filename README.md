@@ -26,10 +26,10 @@ Remove Arkiv and the system breaks entirely. That is the correct dependency leve
 
 | Weight | Criterion |
 |---|---|
-| **35%** | Code quality + Arkiv-native usage (correct entities/attributes/TTL/ownership, no anti-patterns) |
-| **25%** | Novel use of Arkiv primitives ($creator/$owner split, batch mutations, time-bounded coordination) |
-| **20%** | Demo polish + clarity of pitch |
-| **20%** | Builder behavior (commits, docs, README quality, attribution) |
+| **30%** | Technical execution + Arkiv usage (works, deploys, no anti-patterns) |
+| **25%** | Product viability (real problem, real users, not a 36h gimmick) |
+| **25%** | Scalability (architecture survives 100x users, sustainable storage costs) |
+| **20%** | Demo polish + business clarity (pitch + monetization plan) |
 
 Total: weighted 0-100 score per project. Agent 5 publishes it to the tracker.
 
@@ -496,15 +496,15 @@ before this rubric was added. After the fix: zero usage = 0, always.
 10  → comprehensive usage across all SDK features
 ```
 
-**Output schema (ETHLisbon rubric — `feat/ethlisbon-judging` branch):**
+**Output schema (ETHLisbon rubric):**
 ```json
 {
   "scores": {
-    "codeQuality": 78,
-    "novelty": 65,
-    "demoPolish": 80,
-    "builderBehavior": 72,
-    "total": 73
+    "technical": 78,
+    "viability": 65,
+    "scalability": 70,
+    "demo": 80,
+    "total": 72
   },
   "featuresUsed": ["createEntity", "buildQuery().where(eq()).fetch()"],
   "featuresMissed": ["subscribeEntityEvents", "mutateEntities"],
@@ -514,7 +514,6 @@ before this rubric was added. After the fix: zero usage = 0, always.
   "patternComparison": "string"
 }
 ```
-*Legacy schema (main branch, pre-ETHLisbon) used a single `fitScore: 0-10` instead of `scores` object.*
 
 ---
 
@@ -534,18 +533,18 @@ previous reports and produce cross-project insights — "which projects
 used `expiresIn`?", "what SDK features are developers consistently
 ignoring?" — without re-running any analysis.
 
-**Output schema (ETHLisbon rubric — `feat/ethlisbon-judging` branch):**
+**Output schema (ETHLisbon rubric):**
 ```json
 {
   "projectName": "string",
   "goal": "string",
   "techStack": ["string"],
   "scores": {
-    "codeQuality": 78,
-    "novelty": 65,
-    "demoPolish": 80,
-    "builderBehavior": 72,
-    "total": 73
+    "technical": 78,
+    "viability": 65,
+    "scalability": 70,
+    "demo": 80,
+    "total": 72
   },
   "featuresUsed": ["string"],
   "featuresMissed": ["string"],
@@ -554,7 +553,6 @@ ignoring?" — without re-running any analysis.
   "status": "active"
 }
 ```
-*Legacy schema (main branch) used `arkivFitScore: 0-10` instead of `scores` object and lacked `status`.*
 
 ---
 

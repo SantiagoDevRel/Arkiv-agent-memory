@@ -100,11 +100,11 @@ function ReportModal({
   const scoresObj = (a4.scores as Record<string, number> | undefined) || {};
   const score = scoresObj.total ?? ((a4.arkivFitScore as number ?? 0) * 10);
   const scoreColor = score <= 40 ? "#E24B4A" : score <= 70 ? "#EF9F27" : "#1D9E75";
-  const scoreBreakdown = scoresObj.codeQuality != null ? {
-    codeQuality: scoresObj.codeQuality,
-    novelty: scoresObj.novelty,
-    demoPolish: scoresObj.demoPolish,
-    builderBehavior: scoresObj.builderBehavior,
+  const scoreBreakdown = scoresObj.technical != null ? {
+    technical: scoresObj.technical,
+    viability: scoresObj.viability,
+    scalability: scoresObj.scalability,
+    demo: scoresObj.demo,
   } : null;
   const status = (a4.status as string) || "";
   const featuresUsed = (a4.featuresUsed as string[]) || [];
@@ -182,10 +182,10 @@ function ReportModal({
             <SectionTitle>Score Breakdown</SectionTitle>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
               {[
-                { label: "Code · 35%", value: scoreBreakdown.codeQuality },
-                { label: "Novelty · 25%", value: scoreBreakdown.novelty },
-                { label: "Demo · 20%", value: scoreBreakdown.demoPolish },
-                { label: "Builder · 20%", value: scoreBreakdown.builderBehavior },
+                { label: "Technical · 30%", value: scoreBreakdown.technical },
+                { label: "Viability · 25%", value: scoreBreakdown.viability },
+                { label: "Scalability · 25%", value: scoreBreakdown.scalability },
+                { label: "Demo · 20%", value: scoreBreakdown.demo },
               ].map((c) => (
                 <div key={c.label} style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "6px", padding: "10px", textAlign: "center" }}>
                   <div style={{ fontSize: "18px", fontWeight: 700, color: "#f0f0f0" }}>{c.value ?? "?"}</div>

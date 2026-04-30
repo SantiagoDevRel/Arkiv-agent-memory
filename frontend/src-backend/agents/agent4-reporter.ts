@@ -87,7 +87,7 @@ ${JSON.stringify(arkivEvaluation, null, 2)}`;
   const scores = (report.scores as Record<string, number>) || {};
   log(`Project: ${report.projectName || "unknown"}`);
   log(`Final ETHLisbon score: ${scores.total ?? "?"}/100 (status: ${report.status || "?"})`, { highlight: true });
-  log(`  cq: ${scores.codeQuality ?? "?"} · novelty: ${scores.novelty ?? "?"} · demo: ${scores.demoPolish ?? "?"} · builder: ${scores.builderBehavior ?? "?"}`);
+  log(`  tech: ${scores.technical ?? "?"} · viability: ${scores.viability ?? "?"} · scale: ${scores.scalability ?? "?"} · demo: ${scores.demo ?? "?"}`);
   log(`${Array.isArray(report.recommendations) ? report.recommendations.length : 0} recommendations generated`);
 
   const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
