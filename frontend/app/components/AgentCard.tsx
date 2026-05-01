@@ -8,7 +8,7 @@ import { useRef, useEffect } from "react";
 type LogEntry = { time: string; message: string; highlight?: boolean; success?: boolean };
 
 type AgentCardProps = {
-  agentId: "agent1" | "agent2" | "agent3" | "agent4";
+  agentId: "agent1" | "agent2" | "agent3" | "agent4" | "agent5";
   name: string;
   status: "idle" | "waiting" | "running" | "done";
   logs: LogEntry[];
@@ -17,15 +17,16 @@ type AgentCardProps = {
   payload?: object;
 };
 
-const AGENT_NUMBER: Record<string, number> = { agent1: 1, agent2: 2, agent3: 3, agent4: 4 };
-const AGENT_COLORS: Record<string, string> = { agent1: "#5ECBAA", agent2: "#EF9F27", agent3: "#1D9E75", agent4: "#8b7cf8" };
-const AGENT_ROLES: Record<string, string> = { agent1: "readme reader", agent2: "code analyzer", agent3: "arkiv expert", agent4: "reporter" };
+const AGENT_NUMBER: Record<string, number> = { agent1: 1, agent2: 2, agent3: 3, agent4: 4, agent5: 5 };
+const AGENT_COLORS: Record<string, string> = { agent1: "#5ECBAA", agent2: "#EF9F27", agent3: "#1D9E75", agent4: "#8b7cf8", agent5: "#ec4899" };
+const AGENT_ROLES: Record<string, string> = { agent1: "readme reader", agent2: "code analyzer", agent3: "arkiv expert", agent4: "reporter", agent5: "tracker pusher" };
 
 const ENTITY_TYPE_MAP: Record<string, { label: string; bg: string; color: string; border: string }> = {
   agent1: { label: "readme-summary", bg: "#001a10", color: "#1D9E75", border: "#0a3a20" },
   agent2: { label: "code-analysis", bg: "#0a1525", color: "#378ADD", border: "#1a3a5a" },
   agent3: { label: "arkiv-signal", bg: "#1a1000", color: "#EF9F27", border: "#3a2800" },
   agent4: { label: "final-report", bg: "#0e0a1a", color: "#8b7cf8", border: "#2a1a4a" },
+  agent5: { label: "tracker-row", bg: "#1f0a14", color: "#ec4899", border: "#3a0a28" },
 };
 
 const STATUS_BADGE: Record<string, { bg: string; color: string; text: string; border: string }> = {

@@ -58,10 +58,22 @@ const MODAL_DATA: Record<string, { tagColor: string; tag: string; title: string;
     steps: [
       { num: "01", color: "#8b7cf8", text: "Queries Arkiv for all 3 entities from this run. Verifies all are present before continuing." },
       { num: "02", color: "#8b7cf8", text: "Sends all three payloads to Claude. Synthesizes final report: overview, fit score, recommendations, verdict." },
-      { num: "03", color: "#8b7cf8", text: "Writes final report with TTL 2,592,000 seconds (30 days). The only entity that outlives the session." },
-      { num: "04", color: "#8b7cf8", text: "Future runs query this entity. Cross-project analysis without re-running any agents." },
+      { num: "03", color: "#8b7cf8", text: "Writes final report with TTL 2,592,000 seconds (30 days). The report that survives the session." },
+      { num: "04", color: "#8b7cf8", text: "Agent 5 then publishes a tracker-row copy to the public dashboard." },
     ],
     codeBlock: "{ type: 'final-report', sessionId, repo, date }",
+  },
+  agent5: {
+    tagColor: "#ec4899",
+    tag: "Agent 5 \u00b7 Tracker Pusher",
+    title: "Reads the final report. Publishes the row judges actually see.",
+    steps: [
+      { num: "01", color: "#ec4899", text: "Queries Arkiv for Agent 4's final-report entity in this session. Source of truth." },
+      { num: "02", color: "#ec4899", text: "Sends the report to Claude. Asks for a single tracker-row JSON: project name, score, status, repo, judgedAt timestamp." },
+      { num: "03", color: "#ec4899", text: "Writes one entity to Arkiv with TTL 30 days. Public dashboard reads it. Future hackathons inherit the dataset." },
+      { num: "04", color: "#ec4899", text: "Optionally POSTs to TRACKER_API_URL if set. Arkiv is the source of truth either way \u2014 the API call is just a cache nudge." },
+    ],
+    codeBlock: "{ type: 'tracker-row', sessionId, repo, total }",
   },
 };
 
@@ -72,6 +84,7 @@ const ENTITY_CARDS = [
   { type: "code-analysis", pillBg: "#0a1a2a", pillColor: "#378ADD", pillBorder: "#1a3a5a", key: "0x8d1e...a04c", ttlText: "1m 58s", ttlColor: "#EF9F27", barPct: 38 },
   { type: "arkiv-signal", pillBg: "#1a1000", pillColor: "#EF9F27", pillBorder: "#3a2a00", key: "0x36f2...01b0", ttlText: "1m 12s", ttlColor: "#EF9F27", barPct: 22 },
   { type: "final-report", pillBg: "#0e0a1a", pillColor: "#8b7cf8", pillBorder: "#2a1a4a", key: "0x899818...cce8", ttlText: "30 days", ttlColor: "#8b7cf8", barPct: 100 },
+  { type: "tracker-row", pillBg: "#1f0a14", pillColor: "#ec4899", pillBorder: "#3a0a28", key: "0xb1bdeb6c...4f12", ttlText: "30 days", ttlColor: "#ec4899", barPct: 100 },
 ];
 
 const TOOLTIPS: Record<string, string> = {
@@ -142,11 +155,12 @@ export default function HowItWorksTab() {
   const modal = modalId ? MODAL_DATA[modalId] : null;
 
   // ─── Pipeline rows ───
-  const pipelineRows = [
+  const pipelineRows: { id: string; label: string; accent: string; bg: string; border: string; arkiv: string; extra?: string }[] = [
     { id: "agent1", label: "AGENT 1 \u00b7 README READER", accent: "#5ECBAA", bg: "#0a1a16", border: "#1a3a2a", arkiv: "WRITES" },
     { id: "agent2", label: "AGENT 2 \u00b7 CODE ANALYZER", accent: "#EF9F27", bg: "#1a1000", border: "#3a2800", arkiv: "WRITES" },
     { id: "agent3", label: "AGENT 3 \u00b7 ARKIV EXPERT", accent: "#1D9E75", bg: "#001a10", border: "#0a3a20", arkiv: "READS + WRITES" },
     { id: "agent4", label: "AGENT 4 \u00b7 REPORTER", accent: "#8b7cf8", bg: "#0e0a1a", border: "#2a1a4a", arkiv: "READS + WRITES", extra: "(30 days)" },
+    { id: "agent5", label: "AGENT 5 \u00b7 TRACKER PUSHER", accent: "#ec4899", bg: "#1f0a14", border: "#3a0a28", arkiv: "READS + WRITES", extra: "(30d \u00b7 public)" },
   ];
 
   const Connector = () => (
@@ -161,9 +175,9 @@ export default function HowItWorksTab() {
       {/* ── SECTION 1: Pipeline overview ── */}
       <div style={{ marginBottom: "40px" }}>
         <div style={{ fontSize: "12px", color: "#888", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>01 &middot; Overview</div>
-        <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>Four agents. One memory layer.</h2>
+        <h2 style={{ fontSize: "20px", color: "var(--text-primary)", fontWeight: 700, marginBottom: "8px" }}>Five agents. One memory layer.</h2>
         <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8, maxWidth: "760px", marginBottom: "16px" }}>
-          You give a GitHub repo URL. Four agents run in sequence. No agent receives another agent&apos;s output as a function call. The only way they communicate is through Arkiv &mdash; a blockchain memory layer. Remove Arkiv and the system breaks.
+          You give a GitHub repo URL. Five agents run in sequence. No agent receives another agent&apos;s output as a function call. The only way they communicate is through Arkiv &mdash; a blockchain memory layer. Remove Arkiv and the system breaks. Agent 5 (the ETHLisbon addition) publishes the final tracker row to the public dashboard.
         </p>
 
         {/* Vertical pipeline */}
@@ -235,7 +249,12 @@ export default function HowItWorksTab() {
               </div>
               {idx === 3 && (
                 <div style={{ fontSize: "9px", color: "#888", marginTop: "6px" }}>
-                  This is the only entity that outlives the session. Working memory from Agents 1, 2, and 3 has already expired.
+                  Final report — survives 30 days. Working memory from Agents 1, 2, and 3 has already expired.
+                </div>
+              )}
+              {idx === 4 && (
+                <div style={{ fontSize: "9px", color: "#888", marginTop: "6px" }}>
+                  Tracker row — Agent 5 publishes this for the public ETHLisbon dashboard. Same 30d TTL.
                 </div>
               )}
             </div>

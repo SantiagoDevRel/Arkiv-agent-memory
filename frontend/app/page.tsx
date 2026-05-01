@@ -40,6 +40,7 @@ const AGENTS = [
   { id: "agent2", name: "Code Analyzer", order: 2 },
   { id: "agent3", name: "Arkiv Expert", order: 3 },
   { id: "agent4", name: "Reporter", order: 4 },
+  { id: "agent5", name: "Tracker Pusher", order: 5 },
 ] as const;
 
 const PROVENANCE = [
@@ -47,6 +48,7 @@ const PROVENANCE = [
   { agentId: "agent2", label: "code-analysis", bg: "#0a1a2a", color: "#378ADD" },
   { agentId: "agent3", label: "arkiv-signal", bg: "#1a1000", color: "#EF9F27" },
   { agentId: "agent4", label: "final-report", bg: "#0e0a1a", color: "#8b7cf8" },
+  { agentId: "agent5", label: "tracker-row", bg: "#1f0a14", color: "#ec4899" },
 ];
 
 // --- Helpers ---
@@ -319,6 +321,7 @@ export default function Home() {
     agent2: { status: "idle", logs: [] },
     agent3: { status: "idle", logs: [] },
     agent4: { status: "idle", logs: [] },
+    agent5: { status: "idle", logs: [] },
   });
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -335,6 +338,7 @@ export default function Home() {
       agent2: { status: "waiting", logs: [] },
       agent3: { status: "waiting", logs: [] },
       agent4: { status: "waiting", logs: [] },
+      agent5: { status: "waiting", logs: [] },
     });
 
     const controller = new AbortController();
@@ -497,13 +501,13 @@ export default function Home() {
           </div>
 
           <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "10px", color: "#777", fontFamily: "var(--font-mono)", letterSpacing: "0.05em", padding: "10px 0", borderTop: "1px solid var(--border-subtle)", marginTop: "4px" }}>
-            <span>4 agents run in sequence</span>
+            <span>5 agents run in sequence</span>
             <span style={{ color: "#555" }}>&middot;</span>
             <span>~60&ndash;90s total</span>
             <span style={{ color: "#555" }}>&middot;</span>
             <span>each agent writes to Arkiv before the next starts</span>
             <span style={{ color: "#555" }}>&middot;</span>
-            <span style={{ color: "var(--accent-green)" }}>working memory: 5 min TTL &middot; final report: 30 days</span>
+            <span style={{ color: "var(--accent-green)" }}>working memory: 5 min TTL &middot; final report + tracker row: 30 days</span>
           </div>
 
           {error && (
@@ -512,19 +516,23 @@ export default function Home() {
             </div>
           )}
 
-          {/* 2x2 Agent grid */}
+          {/* 2x2 grid for agents 1-4, full-width finale for agent 5 */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             {AGENTS.map((agent) => (
-              <AgentCard
+              <div
                 key={agent.id}
-                agentId={agent.id as "agent1" | "agent2" | "agent3" | "agent4"}
-                name={agent.name}
-                status={agents[agent.id].status}
-                logs={agents[agent.id].logs}
-                entityId={agents[agent.id].entityId}
-                txHash={agents[agent.id].txHash}
-                payload={agents[agent.id].payload}
-              />
+                style={agent.id === "agent5" ? { gridColumn: "1 / -1" } : undefined}
+              >
+                <AgentCard
+                  agentId={agent.id}
+                  name={agent.name}
+                  status={agents[agent.id].status}
+                  logs={agents[agent.id].logs}
+                  entityId={agents[agent.id].entityId}
+                  txHash={agents[agent.id].txHash}
+                  payload={agents[agent.id].payload}
+                />
+              </div>
             ))}
           </div>
 
